@@ -1,0 +1,14 @@
+IR_G_ALLOC FLOAT, @0, $1.0f, $2.0f, $.3f, $4.0f
+IR_FUNC_START INT, main
+IR_ADD INT, %0, $0, $0
+IR_MUL INT, %1, $0, $16
+IR_ADD INT, %2, %0, %1
+IR_MUL INT, %3, $0, $8
+IR_ADD INT, %4, %2, %3
+IR_MUL INT, %5, $0, $4
+IR_ADD INT, %6, %4, %5
+IR_PARAM FLOAT, @0<%6
+IR_CALL VOID, print_float
+IR_RETURN INT, $0
+IR_FUNC_END INT, main
+

@@ -1,0 +1,6 @@
+IR_FUNC_START INT, main
+IR_L_ALLOC INT, ^0, $0
+IR_L_ALLOC INT, ^1, $1, $2, $3, $4
+IR_RETURN INT, $0
+IR_FUNC_END INT, main
+

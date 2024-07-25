@@ -1,0 +1,4 @@
+invoke main
+goto L1
+^1 = 2
+return 2

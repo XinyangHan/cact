@@ -1,0 +1,19 @@
+IR_G_ALLOC INT, @0, $1, $2, $3, $4, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+IR_FUNC_START INT, main
+IR_L_ALLOC INT, ^0, $1, $2, $3, $0, $0, $0
+IR_ADD INT, %0, $0, $0
+IR_MUL INT, %1, $1, $24
+IR_ADD INT, %2, %0, %1
+IR_MUL INT, %3, $1, $12
+IR_ADD INT, %4, %2, %3
+IR_MUL INT, %5, $1, $4
+IR_ADD INT, %6, %4, %5
+IR_ADD INT, %7, $0, $0
+IR_MUL INT, %8, $1, $8
+IR_ADD INT, %9, %7, %8
+IR_MUL INT, %10, $1, $4
+IR_ADD INT, %11, %9, %10
+IR_ADD INT, %12, @0<%6, ^0<%11
+IR_RETURN INT, %12
+IR_FUNC_END INT, main
+

@@ -1,0 +1,7 @@
+invoke main
+invoke func
+%0 = 5
+^1 = 5
+return 5
+^2 = 5
+return 5
