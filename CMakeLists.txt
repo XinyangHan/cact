@@ -11,7 +11,7 @@ include_directories(grammar)
 include_directories(src)
 
 
-FILE(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "grammar/*.cpp")
+FILE(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/ir/*.cpp" "src/analysis/*.cpp" "src/asm/*.cpp" "grammar/*.cpp")
 
 FILE(GLOB_RECURSE ANTLR_LIB_FILES "deps/antlr4-runtime/*.cpp")
 

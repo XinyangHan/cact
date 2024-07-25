@@ -1,5 +1,5 @@
-#include "asmGenerator.h"
-#include "irCode.h"
+#include "include/RV_Gen.h"
+#include "include/irCode.h"
 #include <algorithm>
 
 void AsmGenerator::invokeAsmGene(std::ofstream &asmCodeFile, std::vector<BasicBlock*> &basicBlockList) {

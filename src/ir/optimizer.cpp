@@ -1,7 +1,7 @@
-#include "irOptimizer.h"
-#include "irCode.h"
+#include "include/irOptimizer.h"
+#include "include/irCode.h"
 #include <cassert>
-#include "irGenerator.h"
+#include "include/irGenerator.h"
 
 void IROptimizer::basicBlockPartition(std::vector<IRCode*> &irCodeList) {
     int basicBlockSeq = -1;
@@ -120,53 +120,6 @@ void BasicBlock::commonSubexpssionEliminate() {
             rebuildIR.push_back(irCode);
     }
 
-    /*if (dagNodeList.size() == 0) {
-        return ;
-    }
-    else if (dagNodeList.size() == 1) {
-        rebuildIR.push_back(dagNodeList[0]->irRebuild());
-        DagNode *dagNode = dagNodeList[0];
-        if (dynamic_cast<DagInnerNode*>(dagNode) != nullptr && !reinterpret_cast<DagInnerNode*>(dagNode)->isArray) {
-            auto it = dagNode->relatedSet.begin();
-            if (dynamic_cast<IRTemp*>(*it) == nullptr) {
-                for (auto related : dagNode->relatedSet) {
-                    rebuildIR.push_back(new IRCode(dagNode->dataType, IR_ASSIGN, related, dagNode->getIROperand(), nullptr));
-                }
-            }
-        }
-        return ;
-    }
-    int i;
-    for (i = 0; i < dagNodeList.size()-1; i++) {
-        rebuildIR.push_back(dagNodeList[i]->irRebuild());
-    }
-    IROpCode opCode = dagNodeList[i]->opCode;
-    if (opCode == IR_CALL || opCode == IR_RETURN || opCode == IR_GOTO || opCode == IR_BLT || opCode == IR_BLE || opCode == IR_BGT || opCode == IR_BGE || opCode == IR_BEQ || opCode == IR_BNE) {
-        for (auto dagNode : dagNodeList) {
-            if (dynamic_cast<DagInnerNode*>(dagNode) != nullptr && !reinterpret_cast<DagInnerNode*>(dagNode)->isArray) {
-                auto it = dagNode->relatedSet.begin();
-                if (dynamic_cast<IRTemp*>(*it) == nullptr) {
-                    for (auto related : dagNode->relatedSet) {
-                        rebuildIR.push_back(new IRCode(dagNode->dataType, IR_ASSIGN, related, dagNode->getIROperand(), nullptr));
-                    }
-                }
-            }
-        }
-        rebuildIR.push_back(dagNodeList[i]->irRebuild());
-    }
-    else {
-        rebuildIR.push_back(dagNodeList[i]->irRebuild());
-        for (auto dagNode : dagNodeList) {
-            if (dynamic_cast<DagInnerNode*>(dagNode) != nullptr && !reinterpret_cast<DagInnerNode*>(dagNode)->isArray) {
-                auto it = dagNode->relatedSet.begin();
-                if (dynamic_cast<IRTemp*>(*it) == nullptr) {
-                    for (auto related : dagNode->relatedSet) {
-                        rebuildIR.push_back(new IRCode(dagNode->dataType, IR_ASSIGN, related, dagNode->getIROperand(), nullptr));
-                    }
-                }
-            }
-        }
-    } */
 }
 
 void BasicBlock::calLiveInfo() {

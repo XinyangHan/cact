@@ -1,4 +1,4 @@
-#include "irInterpret.h"
+#include "include/irInterpret.h"
 #include <iostream>
 
 std::any InterpretBool::getValue(int displacement, int base) {

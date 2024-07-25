@@ -5,7 +5,7 @@
 #include <map>
 #include "type.h"
 #include <map>
-#include "asmGenerator.h"
+#include "RV_Gen.h"
 class LiveInfo;
 class IRCode;
 

@@ -1,4 +1,4 @@
-#include "symbolTable.h"
+#include "include/symTable.h"
 
 void FuncSymbol::addParam(ValSymbol *valSymbol) {
     params.push_back(valSymbol);

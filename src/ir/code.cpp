@@ -1,6 +1,6 @@
-#include "irInterpret.h"
-#include "map.h"
-#include "symbolTable.h"
+#include "include/irInterpret.h"
+#include "include/map.h"
+#include "include/symTable.h"
 #include <algorithm>
 #include <iostream>
 

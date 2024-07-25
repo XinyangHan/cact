@@ -1,12 +1,12 @@
 #include <iostream>
 #include <fstream>
-#include "symbolTable.h"
+#include "include/symTable.h"
 #include "CACTLexer.h"
 #include "CACTParser.h"
-#include "analysis.h"
-#include "irGenerator.h"
-#include "irInterpret.h"
-#include "asmGenerator.h"
+#include "include/analysis.h"
+#include "include/irGenerator.h"
+#include "include/irInterpret.h"
+#include "include/RV_Gen.h"
 
 using namespace antlr4;
 Env *Env::instance = nullptr;

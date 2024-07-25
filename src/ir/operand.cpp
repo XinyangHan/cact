@@ -1,7 +1,7 @@
 #include <string.h>
-#include "irOperand.h"
-#include "symbolTable.h"
-#include "irOptimizer.h"
+#include "include/irOperand.h"
+#include "include/symTable.h"
+#include "include/irOptimizer.h"
 
 //----------------- IRGloblVar ------------------------------------------------------------------
 void IRGloblVar::printIR(std::ofstream &irCodeFile) {

@@ -1,8 +1,8 @@
 grammar CACT;
 
 @header {
-    #include "irOperand.h"
-    #include "symbolTable.h"
+    #include "include/irOperand.h"
+    #include "symTable.h"
 }
 
 /****** parser ******/

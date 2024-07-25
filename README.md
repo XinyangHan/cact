@@ -15,4 +15,3 @@ cmake ..
 make -j
 ./compiler ../test/samples_lex_and_syntax/00_true_main.cact
 ```
-# cact

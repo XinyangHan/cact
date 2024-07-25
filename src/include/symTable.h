@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 #include <stdexcept>
-#include "irOperand.h"
+#include "include/irOperand.h"
 
 class Symbol {
     private:

@@ -1,5 +1,5 @@
 #include "CACTBaseVisitor.h"
-#include "symbolTable.h"
+#include "symTable.h"
 #include "irGenerator.h"
 using namespace antlr4;
 class IRInterpretor;

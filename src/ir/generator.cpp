@@ -1,4 +1,4 @@
-#include "irGenerator.h"
+#include "include/irGenerator.h"
 using namespace std;
 
 IROperand *IRGenerator::addIRGloblVar(Type dataType, std::vector<IROperand*> &initVal) {
