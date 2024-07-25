@@ -4,32 +4,38 @@
 #include "include/analysis.h"
 using namespace antlr4;
 
-std::any Analysis::visitStart(CACTParser::StartContext *ctx) {
-    //add lib functions
-    std::string emptyName;
-    std::vector<int> emptyDimArr;
-    ctx->valSymbolList.push_back(new ValSymbol(Type::INT, emptyName, 0, emptyDimArr, false));
-    ctx->valSymbolList.push_back(new ValSymbol(Type::FLOAT, emptyName, 0, emptyDimArr, false));
-    ctx->valSymbolList.push_back(new ValSymbol(Type::DOUBLE, emptyName, 0, emptyDimArr, false));
-    ctx->valSymbolList.push_back(new ValSymbol(Type::BOOL, emptyName, 0, emptyDimArr, false));
+std::any Analysis::visitBegin(CACTParser::StartContext *ctx) {
+    // 添加库函数
+    std::string emptyName;  // 空字符串名称
+    std::vector<int> emptyDimArr;  // 空维度数组
+    ctx->valSymbolList.push_back(new ValSymbol(Type::INT, emptyName, 0, emptyDimArr, false));  // 添加int类型的ValSymbol
+    ctx->valSymbolList.push_back(new ValSymbol(Type::FLOAT, emptyName, 0, emptyDimArr, false));  // 添加float类型的ValSymbol
+    ctx->valSymbolList.push_back(new ValSymbol(Type::DOUBLE, emptyName, 0, emptyDimArr, false));  // 添加double类型的ValSymbol
+    ctx->valSymbolList.push_back(new ValSymbol(Type::BOOL, emptyName, 0, emptyDimArr, false));  // 添加bool类型的ValSymbol
+
+    // 添加库函数符号到环境中
     for (int i = 0; i < ctx->libFuncType.size(); i++) {
         FuncSymbol *funcSymbol = env->addFuncSymbol(ctx->libFuncType[i], ctx->libFuncName[i]);
         if (i < ctx->valSymbolList.size()) {
             funcSymbol->addParam(ctx->valSymbolList[i]);
         }
     }
+
+    // 访问子节点
     visitChildren(ctx);
-    //check main function
+
+    // 检查main函数
     std::string mainFunc = "main";
     FuncSymbol *funcSymbol = env->searchFuncSymbol(mainFunc);
     if (funcSymbol == nullptr) {
-        throw runtime_error("cannot find function main.");
+        throw runtime_error("无法找到main函数。");
+    } else if (funcSymbol->getParams().size() != 0) {
+        throw runtime_error("main函数不能有参数。");
     }
-    else if (funcSymbol->getParams().size() != 0) {
-        throw runtime_error("function main cannot have parameters.");
-    }
+
     return std::any();
 }
+
 
 std::any Analysis::visitBType(CACTParser::BTypeContext *ctx) {
     if (ctx->BOOL() != nullptr) {

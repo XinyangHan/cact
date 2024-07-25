@@ -23,7 +23,7 @@ public:
   /**
    * Visit parse trees produced by CACTParser.
    */
-    virtual std::any visitStart(CACTParser::StartContext *context) = 0;
+    virtual std::any visitBegin(CACTParser::StartContext *context) = 0;
 
     virtual std::any visitCompUnit(CACTParser::CompUnitContext *context) = 0;
 

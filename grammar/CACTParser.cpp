@@ -262,7 +262,7 @@ size_t CACTParser::StartContext::getRuleIndex() const {
 
 std::any CACTParser::StartContext::accept(tree::ParseTreeVisitor *visitor) {
   if (auto parserVisitor = dynamic_cast<CACTVisitor*>(visitor))
-    return parserVisitor->visitStart(this);
+    return parserVisitor->visitBegin(this);
   else
     return visitor->visitChildren(this);
 }

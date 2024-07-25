@@ -19,7 +19,7 @@
 class  CACTBaseVisitor : public CACTVisitor {
 public:
 
-  virtual std::any visitStart(CACTParser::StartContext *ctx) override {
+  virtual std::any visitBegin(CACTParser::StartContext *ctx) override {
     return visitChildren(ctx);
   }
 

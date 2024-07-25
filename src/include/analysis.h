@@ -20,7 +20,7 @@ class Analysis : public CACTBaseVisitor{
     IRInterpretor *irInterpretor;
     AsmGenerator *asmGenerator;
     
-    std::any visitStart(CACTParser::StartContext *ctx) override;
+    std::any visitBegin(CACTParser::StartContext *ctx) override;
     
     std::any visitConstDecl(CACTParser::ConstDeclContext *ctx) override;
     
