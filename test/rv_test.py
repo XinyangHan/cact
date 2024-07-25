@@ -2,7 +2,7 @@ import os
 import subprocess
 
 def main():
-    target_dir = "~/labs/cact-master-1/cact-master/test/samples_codegen_functional"
+    target_dir = "~/labs/cact-master-1/cact-master/test/samples_codegen_functional_O0"
     
     os.chdir(target_dir)
     
