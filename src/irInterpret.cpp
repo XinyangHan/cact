@@ -61,7 +61,7 @@ void IRInterpretor::interpretIRCode(std::ofstream &interpretFile, std::vector<IR
         nextIR = nextIR->interpretIRCode(interpretFile, this);
     }
     int mainReturnVal = std::any_cast<int>(reinterpret_cast<InterpretTemp*>(currStack->calleeReturnVal)->value);
-    std::cout << "cact main return value: " << mainReturnVal << std::endl;
+    std::cout << "程序返回值: " << mainReturnVal << std::endl;
 }
 
 std::any IRInterpretor::getImmediateVal(IRImmediate* immediate) {

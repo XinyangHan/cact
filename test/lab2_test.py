@@ -3,13 +3,13 @@ import glob
 from help_functions import create_dirs, remove_and_touch, execute
 
 def log_stage(stage, theme):
-    print(f"\n=== {stage}: {theme} ===")
+    print(f"\n=== 阶段: {stage}: {theme} ===")
 
 def log_file_processing(file):
-    print(f"\033[31mProcessing: {file}\033[0m")
+    print(f"\033[31m处理文件: {file}\033[0m")
 
 def log_filename(filename):
-    print(f"Filename: {filename}")
+    print(f"文件名: {filename}")
 
 def log_separator():
     print("\033[31m-----------------------------------------------------\033[0m\n")
@@ -30,7 +30,7 @@ def main():
 
     flag = 0
 
-    log_stage("Stage 1", "Lexical and Syntax Analysis")
+    log_stage("阶段 1", "词法和语法分析测试")
 
     for file in sorted(glob.glob('../test/samples_lex_and_syntax/*.cact')):
         log_file_processing(file)
@@ -54,7 +54,7 @@ def main():
             flag = 1
         log_separator()
 
-    log_stage("Stage 2", "Semantic Analysis")
+    log_stage("阶段 2", "语义分析测试")
 
     for file in sorted(glob.glob('../test/samples_semantic/*.cact')):
         log_file_processing(file)
@@ -78,16 +78,16 @@ def main():
             flag = 1
         log_separator()
 
-    log_stage("Stage 3", "Results Summary")
+    log_stage("阶段 3", "测试结果总结")
 
     if flag == 0:
-        print("Lex and Semantic -- PASS")
+        print("词法和语义分析 -- 通过，100%")
     else:
         with open(result_file, 'r') as rf:
             print(rf.read())
-        print("Lex and Semantic -- FAILED")
+        print("词法和语义分析 -- 失败")
 
-    log_stage("Stage 4", "Interpretation Execution for Lexical and Syntax")
+    log_stage("阶段 4", "词法和语法样例的解释执行")
 
     for file in sorted(glob.glob('../test/Generated_IR/samples_lex_and_syntax/*.txt')):
         filename = os.path.basename(file).replace('.txt', '')
@@ -101,7 +101,7 @@ def main():
             command = f'echo "1" | ./compiler {cactfile} {file} -simulate -verbose {interpretfile}'
         execute(command)
 
-    log_stage("Stage 6", "Interpretation Execution for Semantic")
+    log_stage("阶段 5", "语义样例的解释执行")
 
     for file in sorted(glob.glob('../test/Generated_IR/samples_semantic/*.txt')):
         filename = os.path.basename(file).replace('.txt', '')
