@@ -3,9 +3,9 @@
 #include <string>
 #include <fstream>
 #include <map>
-#include "type.h"
+#include "../analysis/type.h"
 #include <map>
-#include "RV_Gen.h"
+#include "../asm/RV_Gen.h"
 class LiveInfo;
 class IRCode;
 
@@ -37,19 +37,19 @@ class IRVar {
     IRVar(Type dataType, int len) : dataType(dataType), len(len) {}
 };
 
-class IRGloblVar : public IRVar, public IROperand {
+class IrGlobalVariable : public IRVar, public IROperand {
     public:
     static int globlVarNum;
     std::vector<IROperand*> initVal;
     bool alloc = false;
 
-    IRGloblVar(Type dataType, int len, std::vector<IROperand*> &initVal) : IRVar(dataType, len), initVal(initVal) {opDataType = dataType;}
+    IrGlobalVariable(Type dataType, int len, std::vector<IROperand*> &initVal) : IRVar(dataType, len), initVal(initVal) {opDataType = dataType;}
     virtual void printIR(std::ofstream &irCodeFile) override;
 };
 
-class IRGloblScalar : public IRGloblVar {
+class IRGloblScalar : public IrGlobalVariable {
     public:
-    IRGloblScalar(Type dataType, std::vector<IROperand*> &initVal) : IRGloblVar(dataType, 1, initVal) {name = globlVarNum++;}
+    IRGloblScalar(Type dataType, std::vector<IROperand*> &initVal) : IrGlobalVariable(dataType, 1, initVal) {name = globlVarNum++;}
 
     std::string toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) override;
     std::string toRegI(AsmGenerator *asmGenerator, LiveInfo *liveInfo);
@@ -58,9 +58,9 @@ class IRGloblScalar : public IRGloblVar {
     void toMem(AsmGenerator *asmGenerator, LiveInfo *liveInfo, std::string srcReg) override;
 };
 
-class IRGloblArray : public IRGloblVar {
+class IRGloblArray : public IrGlobalVariable {
     public:
-    IRGloblArray(Type dataType, int len, std::vector<IROperand*> &initVal) : IRGloblVar(dataType, len, initVal) {name = globlVarNum++;}
+    IRGloblArray(Type dataType, int len, std::vector<IROperand*> &initVal) : IrGlobalVariable(dataType, len, initVal) {name = globlVarNum++;}
 
     std::string toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) override;
 };

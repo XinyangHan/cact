@@ -1,5 +1,5 @@
 #pragma once 
-#include "irCode.h"
+#include "code.h"
 #include <map>
 using namespace std;
 
@@ -12,8 +12,8 @@ class IRGenerator {
     std::map<std::string, IROperand*> immediatePool;
     
     IRGenerator() {irOptimizer = new IROptimizer();}
-    IROperand *addIRGloblVar(Type dataType, std::vector<IROperand*> &initVal);
-    IROperand *addIRGloblVar(Type dataType, int len, std::vector<IROperand*> &initVal);
+    IROperand *addIrGlobalVariable(Type dataType, std::vector<IROperand*> &initVal);
+    IROperand *addIrGlobalVariable(Type dataType, int len, std::vector<IROperand*> &initVal);
     IROperand *addIRLocalVar(Type dataType, std::vector<IROperand*> &initVal);
     IROperand *addIRLocalVar(Type dataType, int len, std::vector<IROperand*> &initVal);
     IROperand *addIRImmediate(Type dataType, const std::string &val);

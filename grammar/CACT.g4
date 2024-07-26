@@ -1,7 +1,7 @@
 grammar CACT;
 
 @header {
-    #include "include/irOperand.h"
+    #include "include/ir/operand.h"
     #include "symTable.h"
 }
 

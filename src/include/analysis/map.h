@@ -1,5 +1,5 @@
 #pragma once
-#include <include/type.h>
+#include <include/analysis/type.h>
 #include <map>
 
 std::map <Type, std::string> type2String{

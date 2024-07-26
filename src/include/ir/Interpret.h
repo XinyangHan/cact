@@ -1,5 +1,5 @@
 #pragma once
-#include "irCode.h"
+#include "code.h"
 #include <any>
 class IRStack;
 class FuncSymbol;

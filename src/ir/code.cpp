@@ -1,6 +1,6 @@
-#include "include/irInterpret.h"
-#include "include/map.h"
-#include "include/symTable.h"
+#include "include/ir/Interpret.h"
+#include "include/analysis/map.h"
+#include "include/analysis/symTable.h"
 #include <algorithm>
 #include <iostream>
 
@@ -189,7 +189,7 @@ void IRCode::print(std::ofstream &irCodeFile) {
         case IR_G_ALLOC:
             irCodeFile << "IR_G_ALLOC ";
             irCodeFile << type2String[dataType] << ", ";
-            reinterpret_cast<IRGloblVar*>(dst)->alloc = true;
+            reinterpret_cast<IrGlobalVariable*>(dst)->alloc = true;
             dst->printIR(irCodeFile);
             irCodeFile << std::endl;
             break;
@@ -431,12 +431,12 @@ void IRCode::findMain(IRInterpretor *irInterpretor, IRCode **entryPoint) {
         case IR_G_ALLOC:
         {
             InterpretOperand *newIP;
-            int len = reinterpret_cast<IRGloblVar*>(dst)->initVal.size();
+            int len = reinterpret_cast<IrGlobalVariable*>(dst)->initVal.size();
             switch (dataType) {
                 case INT:
                     newIP = new InterpretInt(len);
                     for(int i = 0; i < len; i++) {
-                        IRGloblVar  *castDst = reinterpret_cast<IRGloblVar*>(dst);
+                        IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
                         IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
                         if(castImm->val[0] == '0' && (castImm->val[1] == 'x' || castImm->val[1] == 'X') || (castImm->val[0] == '-' && castImm->val[1] == '0' && (castImm->val[2] == 'x' || castImm->val[2] == 'X'))) {
                             reinterpret_cast<InterpretInt*>(newIP)->value.push_back(std::stoi(castImm->val, 0, 16));
@@ -452,7 +452,7 @@ void IRCode::findMain(IRInterpretor *irInterpretor, IRCode **entryPoint) {
                 case FLOAT: 
                     newIP = new InterpretFloat(len);
                     for(int i = 0; i < len; i++) {
-                        IRGloblVar  *castDst = reinterpret_cast<IRGloblVar*>(dst);
+                        IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
                         IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
                         reinterpret_cast<InterpretFloat*>(newIP)->value.push_back(std::stof(castImm->val));
                     }
@@ -460,7 +460,7 @@ void IRCode::findMain(IRInterpretor *irInterpretor, IRCode **entryPoint) {
                 case DOUBLE:
                     newIP = new InterpretDouble(len);
                     for(int i = 0; i < len; i++) {
-                        IRGloblVar  *castDst = reinterpret_cast<IRGloblVar*>(dst);
+                        IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
                         IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
                         reinterpret_cast<InterpretDouble*>(newIP)->value.push_back(std::stod(castImm->val));
                     }
@@ -468,7 +468,7 @@ void IRCode::findMain(IRInterpretor *irInterpretor, IRCode **entryPoint) {
                 default:
                     newIP = new InterpretBool(len);
                     for(int i = 0; i < len; i++) {
-                        IRGloblVar  *castDst = reinterpret_cast<IRGloblVar*>(dst);
+                        IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
                         IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
                         reinterpret_cast<InterpretBool*>(newIP)->value.push_back(castImm->val == "true");
                     }
@@ -548,7 +548,7 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
                 default:
                     newIP = new InterpretBool(len);
                     for(int i = 0; i < len; i++) {
-                        IRGloblVar  *castDst = reinterpret_cast<IRGloblVar*>(dst);
+                        IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
                         IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
                         reinterpret_cast<InterpretBool*>(newIP)->value.push_back(castImm->val == "true");
                     }
@@ -1357,15 +1357,15 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
     switch(opCode) {
         case IR_G_ALLOC:
         {
-            asmGenerator->asmDataList.push_back(std::string(".globl ") + std::string("GVar") + std::to_string(reinterpret_cast<IRGloblVar*>(dst)->name));
+            asmGenerator->asmDataList.push_back(std::string(".globl ") + std::string("GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name));
             if (dst->zero)
                 asmGenerator->asmDataList.push_back(".bss");
             else
                 asmGenerator->asmDataList.push_back(".data");
-            int len = reinterpret_cast<IRGloblVar*>(dst)->len;
+            int len = reinterpret_cast<IrGlobalVariable*>(dst)->len;
             int alignSize;
             int dataLen;
-            switch (reinterpret_cast<IRGloblVar*>(dst)->dataType) {
+            switch (reinterpret_cast<IrGlobalVariable*>(dst)->dataType) {
                 case INT: case FLOAT:
                     alignSize = 2;
                     dataLen = 4;
@@ -1382,9 +1382,9 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
             if (len > 1)
                 alignSize = 3;
             asmGenerator->asmDataList.push_back(std::string(".align") + std::string(" ") + std::to_string(alignSize));
-            asmGenerator->asmDataList.push_back(std::string(".type GVar") + std::to_string(reinterpret_cast<IRGloblVar*>(dst)->name) + std::string(", @object"));
-            asmGenerator->asmDataList.push_back(std::string(".size GVar") + std::to_string(reinterpret_cast<IRGloblVar*>(dst)->name) + std::string(", ") + std::to_string(len * dataLen));
-            asmGenerator->asmDataList.push_back(std::string("GVar") + std::to_string(reinterpret_cast<IRGloblVar*>(dst)->name) + std::string(":"));
+            asmGenerator->asmDataList.push_back(std::string(".type GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name) + std::string(", @object"));
+            asmGenerator->asmDataList.push_back(std::string(".size GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name) + std::string(", ") + std::to_string(len * dataLen));
+            asmGenerator->asmDataList.push_back(std::string("GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name) + std::string(":"));
             if (dst->zero) {
                 asmGenerator->asmDataList.push_back(std::string(".zero ") + std::to_string(len * dataLen) + std::string("\n"));
                 return;
@@ -1393,7 +1393,7 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
             switch(dataType) {
                 case INT:
                     for(int i = 0; i < len; i++) {
-                        IRGloblVar  *castDst = reinterpret_cast<IRGloblVar*>(dst);
+                        IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
                         IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
                         asmGenerator->asmDataList.push_back(std::string(".word ") + std::string(castImm->val));
                     }
@@ -1401,7 +1401,7 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 case FLOAT:
                 {
                     for(int i = 0; i < len; i++) {
-                        IRGloblVar  *castDst = reinterpret_cast<IRGloblVar*>(dst);
+                        IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
                         IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
                         float fval = std::stof(castImm->val);
                         int dval = *(int *)&fval;
@@ -1412,7 +1412,7 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 case DOUBLE:
                 { 
                     for(int i = 0; i < len; i++) {
-                        IRGloblVar  *castDst = reinterpret_cast<IRGloblVar*>(dst);
+                        IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
                         IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
                         double fval = std::stod(castImm->val);
                         long long dval = *(long long *)&fval;
@@ -1423,7 +1423,7 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 case BOOL:
                 {
                     for(int i = 0; i < len; i++) {
-                        IRGloblVar  *castDst = reinterpret_cast<IRGloblVar*>(dst);
+                        IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
                         IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
                         if (castImm->val == "true")
                             asmGenerator->asmDataList.push_back(std::string(".word ") + std::string("1"));

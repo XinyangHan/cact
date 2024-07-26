@@ -1,4 +1,4 @@
-#include "include/symTable.h"
+#include "include/analysis/symTable.h"
 
 // 为函数符号添加参数
 void FuncSymbol::addParam(ValSymbol *valSymbol) {
@@ -35,7 +35,7 @@ ValSymbol *Block::searchValSymbol(std::string &symbolName) {
 }
 
 // 在环境中添加函数符号
-FuncSymbol *Env::addFuncSymbol(Type dataType, std::string &symbolName) {
+FuncSymbol *Environment::addFuncSymbol(Type dataType, std::string &symbolName) {
     auto it = this->funcSymbolTable.find(symbolName);
     if (it != this->funcSymbolTable.end()) {
         // 如果符号表中已经存在同名符号，则抛出重定义错误
@@ -50,7 +50,7 @@ FuncSymbol *Env::addFuncSymbol(Type dataType, std::string &symbolName) {
 }
 
 // 在环境中搜索函数符号
-FuncSymbol *Env::searchFuncSymbol(std::string &symbolName) {
+FuncSymbol *Environment::searchFuncSymbol(std::string &symbolName) {
     auto it = this->funcSymbolTable.find(symbolName);
     if (it == this->funcSymbolTable.end()) {
         // 如果在符号表中未找到符号，则返回空指针

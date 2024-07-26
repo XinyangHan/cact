@@ -1,6 +1,6 @@
 
-    #include "include/irOperand.h"
-    #include "include/symTable.h"
+    #include "include/ir/operand.h"
+    #include "include/analysis/symTable.h"
 
 
 // Generated from CACT.g4 by ANTLR 4.13.1

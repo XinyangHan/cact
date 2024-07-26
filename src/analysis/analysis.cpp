@@ -1,7 +1,7 @@
 #include <iostream>
 #include <any>
 #include <numeric>
-#include "include/analysis.h"
+#include "include/analysis/analysis.h"
 using namespace antlr4;
 
 std::any Analysis::visitBegin(CACTParser::StartContext *ctx) {
@@ -119,12 +119,12 @@ std::any Analysis::visitConstDef(CACTParser::ConstDefContext *ctx) {
     IROperand *dst;
     if (env->getCurrBlock()->getPre() == nullptr) {
         if (ctx->dimsize == 0) {
-            dst = irGenerator->addIRGloblVar(ctx->datatype, ctx->constInitVal()->initval);
+            dst = irGenerator->addIrGlobalVariable(ctx->datatype, ctx->constInitVal()->initval);
             irGenerator->addIRCode(ctx->datatype, IR_G_ALLOC, dst, nullptr, nullptr);
         }
         else {
             int len = accumulate(ctx->dimarr.begin(), ctx->dimarr.end(), 1, std::multiplies<int>());
-            dst = irGenerator->addIRGloblVar(ctx->datatype, len, ctx->constInitVal()->initval);
+            dst = irGenerator->addIrGlobalVariable(ctx->datatype, len, ctx->constInitVal()->initval);
             irGenerator->addIRCode(ctx->datatype, IR_G_ALLOC, dst, nullptr, nullptr);
         }
     }
@@ -196,12 +196,12 @@ std::any Analysis::visitVarDef(CACTParser::VarDefContext *ctx) {
     IROperand *dst;
     if (env->getCurrBlock()->getPre() == nullptr) {
         if (ctx->dimsize == 0) {
-            dst = irGenerator->addIRGloblVar(ctx->datatype, ctx->initval);
+            dst = irGenerator->addIrGlobalVariable(ctx->datatype, ctx->initval);
             irGenerator->addIRCode(ctx->datatype, IR_G_ALLOC, dst, nullptr, nullptr);
         }
         else {
             int len = accumulate(ctx->dimarr.begin(), ctx->dimarr.end(), 1, std::multiplies<int>());
-            dst = irGenerator->addIRGloblVar(ctx->datatype, len, ctx->initval);
+            dst = irGenerator->addIrGlobalVariable(ctx->datatype, len, ctx->initval);
             irGenerator->addIRCode(ctx->datatype, IR_G_ALLOC, dst, nullptr, nullptr);
         }
     }

@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 #include <stdexcept>
-#include "include/irOperand.h"
+#include "include/ir/operand.h"
 
 class Symbol {
     private:
@@ -52,24 +52,24 @@ class Block {
     Block *getPre() {return pre;}
 };
 
-class Env {
+class Environment {
     private:
-    static Env *instance;
+    static Environment *instance;
     Block topBlock;
     Block *currBlock;
     FuncSymbol *currFunc;
     std::map<std::string, FuncSymbol *> funcSymbolTable;
     
-    Env() : topBlock(nullptr), currBlock(&topBlock), currFunc(nullptr) {}
+    Environment() : topBlock(nullptr), currBlock(&topBlock), currFunc(nullptr) {}
     
     public:
-    static Env* getInstance() {
+    static Environment* getInstance() {
         if (!instance) {
-            instance = new Env();
+            instance = new Environment();
         }
         return instance;
     }
-    Env(const Env& other) = delete;
+    Environment(const Environment& other) = delete;
     void setCurrBlock(Block *currBlock) {this->currBlock = currBlock;}
     Block *getCurrBlock() {return currBlock;}
     void setCurrFunc(FuncSymbol *currFunc) {this->currFunc = currFunc;}

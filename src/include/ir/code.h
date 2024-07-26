@@ -1,6 +1,6 @@
 #pragma once
-#include "include/irOperand.h"
-#include "irOptimizer.h"
+#include "include/ir/operand.h"
+#include "optimizer.h"
 #include <any>
 class IRInterpretor;
 

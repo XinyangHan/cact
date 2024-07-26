@@ -3,7 +3,7 @@
 #include <vector>
 #include <map>
 #include <fstream>
-#include "type.h"
+#include "../analysis/type.h"
 class IRCode;
 class IROperand;
 class BasicBlock;

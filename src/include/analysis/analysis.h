@@ -1,6 +1,6 @@
 #include "CACTBaseVisitor.h"
 #include "symTable.h"
-#include "irGenerator.h"
+#include "include/ir/generator.h"
 using namespace antlr4;
 class IRInterpretor;
 
@@ -15,7 +15,7 @@ class Analysis : public CACTBaseVisitor{
         WhileCtx(WhileCtx *preWhileCtx, IROperand *breakDst, IROperand *contDst) {this->preWhileCtx = preWhileCtx; this->breakDst = breakDst; this->contDst = contDst;}
     };
     WhileCtx *currWhile = nullptr;
-    Env *env;
+    Environment *env;
     IRGenerator  *irGenerator;
     IRInterpretor *irInterpretor;
     AsmGenerator *asmGenerator;

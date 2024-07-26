@@ -1,10 +1,10 @@
 #include <string.h>
-#include "include/irOperand.h"
-#include "include/symTable.h"
-#include "include/irOptimizer.h"
+#include "include/ir/operand.h"
+#include "include/analysis/symTable.h"
+#include "include/ir/optimizer.h"
 
-//----------------- IRGloblVar ------------------------------------------------------------------
-void IRGloblVar::printIR(std::ofstream &irCodeFile) {
+//----------------- IrGlobalVariable ------------------------------------------------------------------
+void IrGlobalVariable::printIR(std::ofstream &irCodeFile) {
     irCodeFile << "@" << name;
     if (alloc) {
         for (auto imm : initVal) {
@@ -429,8 +429,8 @@ void IRTemp::printIR(std::ofstream &irCodeFile) {
 //----------------- IRArrayElem ------------------------------------------------------------------
 std::string IRArrayElem::toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
     Type dataType;
-    if (dynamic_cast<IRGloblVar*>(arrayPtr) != nullptr) 
-        dataType = reinterpret_cast<IRGloblVar*>(arrayPtr)->dataType;
+    if (dynamic_cast<IrGlobalVariable*>(arrayPtr) != nullptr) 
+        dataType = reinterpret_cast<IrGlobalVariable*>(arrayPtr)->dataType;
     else 
         dataType = reinterpret_cast<IRLocalVar*>(arrayPtr)->dataType;
     switch(dataType) {
@@ -504,8 +504,8 @@ std::string IRArrayElem::toRegD(AsmGenerator *asmGenerator, LiveInfo *liveInfo) 
 void IRArrayElem::toMem(AsmGenerator *asmGenerator, LiveInfo *liveInfo, std::string srcReg) {
     std::string asmOpcode;
     Type dataType;
-    if (dynamic_cast<IRGloblVar*>(arrayPtr) != nullptr) 
-        dataType = reinterpret_cast<IRGloblVar*>(arrayPtr)->dataType;
+    if (dynamic_cast<IrGlobalVariable*>(arrayPtr) != nullptr) 
+        dataType = reinterpret_cast<IrGlobalVariable*>(arrayPtr)->dataType;
     else 
         dataType = reinterpret_cast<IRLocalVar*>(arrayPtr)->dataType;
     switch(dataType) {
@@ -617,12 +617,12 @@ void IROperand::toArgReg(AsmGenerator *asmGenerator, int num, std::string srcReg
     std::string reg;
     std::string asmOpcode;
     if (dynamic_cast<IRArrayElem*>(this) != nullptr) {
-        if (dynamic_cast<IRGloblVar*>(reinterpret_cast<IRArrayElem*>(this)->arrayPtr) != nullptr) {
-            if (reinterpret_cast<IRGloblVar*>(reinterpret_cast<IRArrayElem*>(this)->arrayPtr)->dataType == FLOAT) {
+        if (dynamic_cast<IrGlobalVariable*>(reinterpret_cast<IRArrayElem*>(this)->arrayPtr) != nullptr) {
+            if (reinterpret_cast<IrGlobalVariable*>(reinterpret_cast<IRArrayElem*>(this)->arrayPtr)->dataType == FLOAT) {
                 reg = "fa" + std::to_string(num);
                 asmOpcode = "fmv.s ";
             }
-            else if (reinterpret_cast<IRGloblVar*>(reinterpret_cast<IRArrayElem*>(this)->arrayPtr)->dataType == DOUBLE) {
+            else if (reinterpret_cast<IrGlobalVariable*>(reinterpret_cast<IRArrayElem*>(this)->arrayPtr)->dataType == DOUBLE) {
                 reg = "fa" + std::to_string(num);
                 asmOpcode = "fmv.d ";
             }
@@ -650,12 +650,12 @@ void IROperand::toArgReg(AsmGenerator *asmGenerator, int num, std::string srcReg
         reg = "a" + std::to_string(num);
         asmOpcode = "mv ";
     }
-    else if (dynamic_cast<IRGloblVar*>(this) != nullptr) {
-        if (reinterpret_cast<IRGloblVar*>(this)->dataType == FLOAT) {
+    else if (dynamic_cast<IrGlobalVariable*>(this) != nullptr) {
+        if (reinterpret_cast<IrGlobalVariable*>(this)->dataType == FLOAT) {
             reg = "fa" + std::to_string(num);
             asmOpcode = "fmv.s ";
         }
-        else if (reinterpret_cast<IRGloblVar*>(this)->dataType == DOUBLE) {
+        else if (reinterpret_cast<IrGlobalVariable*>(this)->dataType == DOUBLE) {
             reg = "fa" + std::to_string(num);
             asmOpcode = "fmv.d ";
         }

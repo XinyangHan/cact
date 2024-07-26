@@ -1,7 +1,7 @@
-#include "include/irOptimizer.h"
-#include "include/irCode.h"
+#include "include/ir/optimizer.h"
+#include "include/ir/code.h"
 #include <cassert>
-#include "include/irGenerator.h"
+#include "include/ir/generator.h"
 
 void IROptimizer::basicBlockPartition(std::vector<IRCode*> &irCodeList) {
     int basicBlockSeq = -1;

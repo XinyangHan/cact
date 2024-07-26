@@ -1,12 +1,12 @@
-#include "include/irGenerator.h"
+#include "include/ir/generator.h"
 using namespace std;
 
-IROperand *IRGenerator::addIRGloblVar(Type dataType, std::vector<IROperand*> &initVal) {
+IROperand *IRGenerator::addIrGlobalVariable(Type dataType, std::vector<IROperand*> &initVal) {
     IROperand *newIROperand = new IRGloblScalar(dataType, initVal);
     return newIROperand;
 }
 
-IROperand *IRGenerator::addIRGloblVar(Type dataType, int len, std::vector<IROperand*> &initVal) {
+IROperand *IRGenerator::addIrGlobalVariable(Type dataType, int len, std::vector<IROperand*> &initVal) {
     IROperand *newIROperand = new IRGloblArray(dataType, len, initVal);
     return newIROperand;
 }

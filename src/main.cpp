@@ -1,16 +1,16 @@
 #include <iostream>
 #include <fstream>
-#include "include/symTable.h"
+#include "include/analysis/symTable.h"
 #include "CACTLexer.h"
 #include "CACTParser.h"
-#include "include/analysis.h"
-#include "include/irGenerator.h"
-#include "include/irInterpret.h"
-#include "include/RV_Gen.h"
+#include "include/analysis/analysis.h"
+#include "include/ir/generator.h"
+#include "include/ir/Interpret.h"
+#include "include/asm/RV_Gen.h"
 
 using namespace antlr4;
-Env *Env::instance = nullptr;
-int IRGloblVar::globlVarNum = 0;
+Environment *Environment::instance = nullptr;
+int IrGlobalVariable::globlVarNum = 0;
 int IRLocalVar::localVarNum = 0;
 int IRImmediate::immediateNum = 0;
 int IRTemp::tempNum = 0;
@@ -42,7 +42,7 @@ int main(int argc, const char* argv[]) {
         return 1;
     }
 
-    Env *env = Env::getInstance();  // 获取环境实例
+    Environment *env = Environment::getInstance();  // 获取环境实例
     visitor.env = env;              // 设置访问者的环境
     visitor.irGenerator = new IRGenerator();  // 创建IR生成器
     visitor.irInterpretor = new IRInterpretor(); // 创建IR解释器
