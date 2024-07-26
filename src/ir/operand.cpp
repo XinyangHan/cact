@@ -9,104 +9,104 @@ void IrGlobalVariable::printIR(std::ofstream &irCodeFile) {
     if (alloc) {
         for (auto imm : initVal) {
             irCodeFile << ", ";
-            reinterpret_cast<IRImmediate*>(imm)->printIR(irCodeFile);
+            reinterpret_cast<IRImmediateValue*>(imm)->printIR(irCodeFile);
         }
         alloc = false;
     }
 }
 
-std::string IRGloblScalar::toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRGloblScalar::toRegister(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     switch(dataType) {
         case Type::INT:
-            return toRegI(asmGenerator, liveInfo);
+            return toRegisterInt(AssemblyGenerator, liveInfo);
         case Type::FLOAT:
-            return toRegF(asmGenerator, liveInfo);
+            return toRegisterFloat(AssemblyGenerator, liveInfo);
         case Type::DOUBLE:
-            return toRegD(asmGenerator, liveInfo);
+            return toRegisterDouble(AssemblyGenerator, liveInfo);
     }
 }
 
-std::string IRGloblScalar::toRegI(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRGloblScalar::toRegisterInt(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     //search addrDescriptor
-    AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
+    AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
     if (addrDescriptor->atReg.size() != 0) {
         std::string reg = addrDescriptor->atReg[0];
-        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->atMemory)) {
-            asmGenerator->regDescriptorMap[reg]->operandList.erase(reinterpret_cast<IROperand*>(this));
+        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->inMem)) {
+            AssemblyGenerator->regDescriptorMap[reg]->ops.erase(reinterpret_cast<IROperand*>(this));
             addrDescriptor->atReg.clear();
         }
         return reg;
     }
     
     //not found
-    std::string addrReg = asmGenerator->getReg(false);
-    asmGenerator->asmCodeList.push_back("la " + addrReg + ", GVar" + std::to_string(name));
-    asmGenerator->asmCodeList.push_back("lw " + addrReg + ", 0(" + addrReg + ")");
+    std::string addrReg = AssemblyGenerator->getReg(false);
+    AssemblyGenerator->asmCodeList.push_back("la " + addrReg + ", GVar" + std::to_string(name));
+    AssemblyGenerator->asmCodeList.push_back("lw " + addrReg + ", 0(" + addrReg + ")");
     
     //add map GScalar-->addrReg, if it will be used later
     if (liveInfo->usedInfo != nullptr) {
         addrDescriptor->atReg.push_back(addrReg);
-        asmGenerator->regDescriptorMap[addrReg]->operandList.insert(reinterpret_cast<IROperand*>(this));
+        AssemblyGenerator->regDescriptorMap[addrReg]->ops.insert(reinterpret_cast<IROperand*>(this));
     }
     
     return addrReg;
 }
 
-std::string IRGloblScalar::toRegF(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRGloblScalar::toRegisterFloat(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     //search addrDescriptor
-    AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
+    AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
     if (addrDescriptor->atReg.size() != 0) {
         std::string reg = addrDescriptor->atReg[0];
-        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->atMemory)) {
-            asmGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->operandList.erase(reinterpret_cast<IROperand*>(this));
+        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->inMem)) {
+            AssemblyGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->ops.erase(reinterpret_cast<IROperand*>(this));
             addrDescriptor->atReg.clear();
         }
         return reg;
     }
     
     //not found
-    std::string addrReg = asmGenerator->getReg(false);
-    std::string srcReg = asmGenerator->getReg(true);
-    asmGenerator->asmCodeList.push_back("la " + addrReg + ", GVar" + std::to_string(name));
-    asmGenerator->asmCodeList.push_back("flw " + srcReg + ", 0(" + addrReg + ")");
+    std::string addrReg = AssemblyGenerator->getReg(false);
+    std::string srcReg = AssemblyGenerator->getReg(true);
+    AssemblyGenerator->asmCodeList.push_back("la " + addrReg + ", GVar" + std::to_string(name));
+    AssemblyGenerator->asmCodeList.push_back("flw " + srcReg + ", 0(" + addrReg + ")");
     
     //add map GScalar-->addrReg, if it will be used later
     if (liveInfo->usedInfo != nullptr) {
         addrDescriptor->atReg.push_back(srcReg);
-        asmGenerator->regDescriptorMap[srcReg]->operandList.insert(reinterpret_cast<IROperand*>(this));
+        AssemblyGenerator->regDescriptorMap[srcReg]->ops.insert(reinterpret_cast<IROperand*>(this));
     }
     
     return srcReg;
 }
 
-std::string IRGloblScalar::toRegD(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRGloblScalar::toRegisterDouble(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     //search addrDescriptor
-    AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
+    AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
     if (addrDescriptor->atReg.size() != 0) {
         std::string reg = addrDescriptor->atReg[0];
-        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->atMemory)) {
-            asmGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->operandList.erase(reinterpret_cast<IROperand*>(this));
+        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->inMem)) {
+            AssemblyGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->ops.erase(reinterpret_cast<IROperand*>(this));
             addrDescriptor->atReg.clear();
         }
         return reg;
     }
     
     //not found
-    std::string addrReg = asmGenerator->getReg(false);
-    std::string srcReg = asmGenerator->getReg(true);
-    asmGenerator->asmCodeList.push_back("la " + addrReg + ", GVar" + std::to_string(name));
-    asmGenerator->asmCodeList.push_back("fld " + srcReg + ", 0(" + addrReg + ")");
+    std::string addrReg = AssemblyGenerator->getReg(false);
+    std::string srcReg = AssemblyGenerator->getReg(true);
+    AssemblyGenerator->asmCodeList.push_back("la " + addrReg + ", GVar" + std::to_string(name));
+    AssemblyGenerator->asmCodeList.push_back("fld " + srcReg + ", 0(" + addrReg + ")");
     
     //add map GScalar-->srcReg, if it will be used later
     if (liveInfo->usedInfo != nullptr) {
         addrDescriptor->atReg.push_back(srcReg);
-        asmGenerator->regDescriptorMap[srcReg]->operandList.insert(reinterpret_cast<IROperand*>(this));
+        AssemblyGenerator->regDescriptorMap[srcReg]->ops.insert(reinterpret_cast<IROperand*>(this));
     }
     
     return srcReg;
 }
 
-void IRGloblScalar::toMem(AsmGenerator *asmGenerator, LiveInfo *liveInfo, std::string srcReg) {
+void IRGloblScalar::toMem(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo, std::string srcReg) {
     std::string asmOpcode;
     switch(dataType) {
         case INT:
@@ -119,31 +119,31 @@ void IRGloblScalar::toMem(AsmGenerator *asmGenerator, LiveInfo *liveInfo, std::s
             asmOpcode = "fsd ";
             break; 
     }
-    std::string addrReg = asmGenerator->getReg(false);
-    asmGenerator->asmCodeList.push_back(std::string("la ") + addrReg + std::string(", GVar") + std::to_string(name));
-    asmGenerator->asmCodeList.push_back(asmOpcode + srcReg + std::string(", 0(") + addrReg + std::string(")"));
+    std::string addrReg = AssemblyGenerator->getReg(false);
+    AssemblyGenerator->asmCodeList.push_back(std::string("la ") + addrReg + std::string(", GVar") + std::to_string(name));
+    AssemblyGenerator->asmCodeList.push_back(asmOpcode + srcReg + std::string(", 0(") + addrReg + std::string(")"));
 }
 
-std::string IRGloblArray::toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRGloblArray::toRegister(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     //search Reg descriptor
-    AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
+    AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
     if (addrDescriptor->atReg.size() != 0) {
         std::string reg = addrDescriptor->atReg[0];
-        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->atMemory)) {
-            asmGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->operandList.erase(reinterpret_cast<IROperand*>(this));
+        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->inMem)) {
+            AssemblyGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->ops.erase(reinterpret_cast<IROperand*>(this));
             addrDescriptor->atReg.clear();
         }
         return reg;
     }
     
     //not found
-    std::string addrReg = asmGenerator->getReg(false);
-    asmGenerator->asmCodeList.push_back("la " + addrReg + ", GVar" + std::to_string(name));
+    std::string addrReg = AssemblyGenerator->getReg(false);
+    AssemblyGenerator->asmCodeList.push_back("la " + addrReg + ", GVar" + std::to_string(name));
     
     //add map GArray-->addrReg, if it will be used later
     if (liveInfo->usedInfo != nullptr) {
         addrDescriptor->atReg.push_back(addrReg);
-        asmGenerator->regDescriptorMap[addrReg]->operandList.insert(reinterpret_cast<IROperand*>(this));
+        AssemblyGenerator->regDescriptorMap[addrReg]->ops.insert(reinterpret_cast<IROperand*>(this));
     }
         
     return addrReg;
@@ -155,13 +155,13 @@ void IRLocalVar::printIR(std::ofstream &irCodeFile) {
     if (alloc) {
         for (auto imm : initVal) {
             irCodeFile << ", ";
-            reinterpret_cast<IRImmediate*>(imm)->printIR(irCodeFile);
+            reinterpret_cast<IRImmediateValue*>(imm)->printIR(irCodeFile);
         }
         alloc = false;
     }
 }
 
-void IRLocalScalar::toAssignReg(AsmGenerator *asmGenerator, int num) {
+void IRLocalScalar::assignReg(AssemblyCodeGenerator *AssemblyGenerator, int num) {
     std::string asmOpcode;
     std::string assignReg;
     switch(dataType) {
@@ -184,94 +184,94 @@ void IRLocalScalar::toAssignReg(AsmGenerator *asmGenerator, int num) {
             break;
     }
     
-    asmGenerator->asmCodeList.push_back(asmOpcode + assignReg + std::string(", ") + std::to_string(-displacement) + std::string("(s0)"));
+    AssemblyGenerator->asmCodeList.push_back(asmOpcode + assignReg + std::string(", ") + std::to_string(-offset) + std::string("(s0)"));
 }
 
-std::string IRLocalScalar::toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRLocalScalar::toRegister(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     switch(dataType) {
         case Type::INT: case Type::INT_PTR:
         case Type::FLOAT_PTR: case Type::DOUBLE_PTR:
-            return toRegI(asmGenerator, liveInfo);
+            return toRegisterInt(AssemblyGenerator, liveInfo);
         case Type::FLOAT:
-            return toRegF(asmGenerator, liveInfo);
+            return toRegisterFloat(AssemblyGenerator, liveInfo);
         case Type::DOUBLE:
-            return toRegD(asmGenerator, liveInfo);
+            return toRegisterDouble(AssemblyGenerator, liveInfo);
     }
 }
 
-std::string IRLocalScalar::toRegI(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRLocalScalar::toRegisterInt(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     //search Reg descriptor
-    AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
+    AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
     if (addrDescriptor->atReg.size() != 0) {
         std::string reg = addrDescriptor->atReg[0];
-        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->atMemory) && !addrDescriptor->isArg) {
-            asmGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->operandList.erase(reinterpret_cast<IROperand*>(this));
+        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->inMem) && !addrDescriptor->isArg) {
+            AssemblyGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->ops.erase(reinterpret_cast<IROperand*>(this));
             addrDescriptor->atReg.clear();
         }
         return reg;
     }
     
     //not found
-    std::string srcReg = asmGenerator->getReg(false);
-    asmGenerator->asmCodeList.push_back(std::string("lw ") + srcReg + std::string(", ") + std::to_string(-displacement) + std::string("(s0)"));
+    std::string srcReg = AssemblyGenerator->getReg(false);
+    AssemblyGenerator->asmCodeList.push_back(std::string("lw ") + srcReg + std::string(", ") + std::to_string(-offset) + std::string("(s0)"));
     
     //add map LScalar-->srcReg
     if (liveInfo->usedInfo != nullptr) {
         addrDescriptor->atReg.push_back(srcReg);
-        asmGenerator->regDescriptorMap[srcReg]->operandList.insert(reinterpret_cast<IROperand*>(this));
+        AssemblyGenerator->regDescriptorMap[srcReg]->ops.insert(reinterpret_cast<IROperand*>(this));
     }
     return srcReg;
 }
 
-std::string IRLocalScalar::toRegF(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRLocalScalar::toRegisterFloat(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     //search Reg descriptor
-    AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
+    AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
     if (addrDescriptor->atReg.size() != 0) {
         std::string reg = addrDescriptor->atReg[0];
-        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->atMemory) && !addrDescriptor->isArg) {
-            asmGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->operandList.erase(reinterpret_cast<IROperand*>(this));
+        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->inMem) && !addrDescriptor->isArg) {
+            AssemblyGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->ops.erase(reinterpret_cast<IROperand*>(this));
             addrDescriptor->atReg.clear();
         }
         return reg;
     }
     
     //not found
-    std::string srcReg = asmGenerator->getReg(true);
-    asmGenerator->asmCodeList.push_back("flw " + srcReg + ", " + std::to_string(-displacement) + std::string("(s0)"));
+    std::string srcReg = AssemblyGenerator->getReg(true);
+    AssemblyGenerator->asmCodeList.push_back("flw " + srcReg + ", " + std::to_string(-offset) + std::string("(s0)"));
     
     //add map LScalar-->srcReg
     if (liveInfo->usedInfo != nullptr) {
         addrDescriptor->atReg.push_back(srcReg);
-        asmGenerator->regDescriptorMap[srcReg]->operandList.insert(reinterpret_cast<IROperand*>(this));
+        AssemblyGenerator->regDescriptorMap[srcReg]->ops.insert(reinterpret_cast<IROperand*>(this));
     }
     return srcReg;
 }
 
-std::string IRLocalScalar::toRegD(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRLocalScalar::toRegisterDouble(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     //search Reg descriptor
-    AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
+    AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
     if (addrDescriptor->atReg.size() != 0) {
         std::string reg = addrDescriptor->atReg[0];
-        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->atMemory) && !addrDescriptor->isArg) {
-            asmGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->operandList.erase(reinterpret_cast<IROperand*>(this));
+        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->inMem) && !addrDescriptor->isArg) {
+            AssemblyGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->ops.erase(reinterpret_cast<IROperand*>(this));
             addrDescriptor->atReg.clear();
         }
         return reg;
     }
     
     //not found
-    std::string srcReg = asmGenerator->getReg(true);
-    asmGenerator->asmCodeList.push_back("fld " + srcReg + ", " + std::to_string(-displacement) + std::string("(s0)"));
+    std::string srcReg = AssemblyGenerator->getReg(true);
+    AssemblyGenerator->asmCodeList.push_back("fld " + srcReg + ", " + std::to_string(-offset) + std::string("(s0)"));
     
     //add map LScalar-->srcReg
     if (liveInfo->usedInfo != nullptr) {
         addrDescriptor->atReg.push_back(srcReg);
-        asmGenerator->regDescriptorMap[srcReg]->operandList.insert(reinterpret_cast<IROperand*>(this));
+        AssemblyGenerator->regDescriptorMap[srcReg]->ops.insert(reinterpret_cast<IROperand*>(this));
     }
     return srcReg;
 }
 
-void IRLocalScalar::toMem(AsmGenerator *asmGenerator, LiveInfo *liveInfo, std::string srcReg) {
+void IRLocalScalar::toMem(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo, std::string srcReg) {
     std::string asmOpcode;
     switch(dataType) {
         case INT:
@@ -288,146 +288,146 @@ void IRLocalScalar::toMem(AsmGenerator *asmGenerator, LiveInfo *liveInfo, std::s
             asmOpcode = "sd ";
             break;
     }
-    asmGenerator->asmCodeList.push_back(asmOpcode + srcReg + std::string(", ") + std::to_string(-displacement) + std::string("(s0)"));
+    AssemblyGenerator->asmCodeList.push_back(asmOpcode + srcReg + std::string(", ") + std::to_string(-offset) + std::string("(s0)"));
 }
 
-std::string IRLocalArray::toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRLocalArray::toRegister(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     //search Reg descriptor
-    AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
+    AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
     if (addrDescriptor->atReg.size() != 0) {
         std::string reg = addrDescriptor->atReg[0];
-        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->atMemory)) {
-            asmGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->operandList.erase(reinterpret_cast<IROperand*>(this));
+        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->inMem)) {
+            AssemblyGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->ops.erase(reinterpret_cast<IROperand*>(this));
             addrDescriptor->atReg.clear();
         }
         return reg;
     }
     
     std::string baseReg;
-    baseReg = asmGenerator->getReg(false);
-    asmGenerator->asmCodeList.push_back(std::string("addi ") + baseReg + std::string(", s0, ") + std::to_string(-displacement));
+    baseReg = AssemblyGenerator->getReg(false);
+    AssemblyGenerator->asmCodeList.push_back(std::string("addi ") + baseReg + std::string(", s0, ") + std::to_string(-offset));
     
     //add map LArray-->baseReg
     if (liveInfo->usedInfo != nullptr) {
         addrDescriptor->atReg.push_back(baseReg);
-        asmGenerator->regDescriptorMap[baseReg]->operandList.insert(reinterpret_cast<IROperand*>(this));
+        AssemblyGenerator->regDescriptorMap[baseReg]->ops.insert(reinterpret_cast<IROperand*>(this));
     }
     
     return baseReg;
 }
 
-//----------------- IRImmediate ------------------------------------------------------------------
-std::string IRImmediate::toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+//----------------- IRImmediateValue ------------------------------------------------------------------
+std::string IRImmediateValue::toRegister(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     switch(dataType) {
         case Type::INT:
-            return toRegI(asmGenerator, liveInfo);
+            return toRegisterInt(AssemblyGenerator, liveInfo);
         case Type::FLOAT: 
-            return toRegF(asmGenerator, liveInfo);
+            return toRegisterFloat(AssemblyGenerator, liveInfo);
         case Type::DOUBLE: 
-            return toRegD(asmGenerator, liveInfo);
+            return toRegisterDouble(AssemblyGenerator, liveInfo);
     }
 }
 
-std::string IRImmediate::toRegI(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
-    std::string reg = asmGenerator->getReg(false);
-    asmGenerator->asmCodeList.push_back("li " + reg + ", " + reinterpret_cast<IRImmediate*>(this)->val);
+std::string IRImmediateValue::toRegisterInt(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
+    std::string reg = AssemblyGenerator->getReg(false);
+    AssemblyGenerator->asmCodeList.push_back("li " + reg + ", " + reinterpret_cast<IRImmediateValue*>(this)->val);
     return reg;
 }
 
-std::string IRImmediate::toRegF(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
-    float fval = std::stof(reinterpret_cast<IRImmediate*>(this)->val);
+std::string IRImmediateValue::toRegisterFloat(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
+    float fval = std::stof(reinterpret_cast<IRImmediateValue*>(this)->val);
     int dval = *(int*)&fval;
-    std::string reg = asmGenerator->getReg(false);
-    asmGenerator->asmCodeList.push_back("li " + reg + ", " + std::to_string(dval));
-    std::string fReg = asmGenerator->getReg(true);
-    asmGenerator->asmCodeList.push_back("fmv.w.x " + fReg + ", " + reg);
+    std::string reg = AssemblyGenerator->getReg(false);
+    AssemblyGenerator->asmCodeList.push_back("li " + reg + ", " + std::to_string(dval));
+    std::string fReg = AssemblyGenerator->getReg(true);
+    AssemblyGenerator->asmCodeList.push_back("fmv.w.x " + fReg + ", " + reg);
     return fReg;
 }
 
-std::string IRImmediate::toRegD(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
-    asmGenerator->asmDataList.push_back(".data");
-    asmGenerator->asmDataList.push_back(".align 3");
-    asmGenerator->asmDataList.push_back(std::string(".type IMM") + std::to_string(name) + std::string(", @object"));
-    asmGenerator->asmDataList.push_back(std::string(".size IMM") + std::to_string(name) + std::string(", 8"));
-    asmGenerator->asmDataList.push_back(std::string("IMM") + std::to_string(name) + std::string(":"));
+std::string IRImmediateValue::toRegisterDouble(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
+    AssemblyGenerator->asmDataList.push_back(".data");
+    AssemblyGenerator->asmDataList.push_back(".align 3");
+    AssemblyGenerator->asmDataList.push_back(std::string(".type IMM") + std::to_string(name) + std::string(", @object"));
+    AssemblyGenerator->asmDataList.push_back(std::string(".size IMM") + std::to_string(name) + std::string(", 8"));
+    AssemblyGenerator->asmDataList.push_back(std::string("IMM") + std::to_string(name) + std::string(":"));
 
     double fval = std::stod(val);
     long long dval = *(long long *)&fval;
-    asmGenerator->asmDataList.push_back(std::string(".dword ") + std::to_string(dval));
+    AssemblyGenerator->asmDataList.push_back(std::string(".dword ") + std::to_string(dval));
 
-    std::string addrReg = asmGenerator->getReg(false);
-    asmGenerator->asmCodeList.push_back(std::string("la ") + addrReg + std::string(", IMM") + std::to_string(name));
-    std::string fReg = asmGenerator->getReg(true);
-    asmGenerator->asmCodeList.push_back(std::string("fld ") + fReg + std::string(", ") + std::string("0(") + addrReg + std::string(")"));
+    std::string addrReg = AssemblyGenerator->getReg(false);
+    AssemblyGenerator->asmCodeList.push_back(std::string("la ") + addrReg + std::string(", IMM") + std::to_string(name));
+    std::string fReg = AssemblyGenerator->getReg(true);
+    AssemblyGenerator->asmCodeList.push_back(std::string("fld ") + fReg + std::string(", ") + std::string("0(") + addrReg + std::string(")"));
     return fReg;
 }
 
-void IRImmediate::printIR(std::ofstream &irCodeFile) {
+void IRImmediateValue::printIR(std::ofstream &irCodeFile) {
     irCodeFile << "$" << val;
 }
 
-//----------------- IRTemp ------------------------------------------------------------------
-std::string IRTemp::toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+//----------------- TemporaryValue ------------------------------------------------------------------
+std::string TemporaryValue::toRegister(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     switch(dataType) {
         case Type::INT:
-            return toRegI(asmGenerator, liveInfo);
+            return toRegisterInt(AssemblyGenerator, liveInfo);
         case Type::FLOAT: case Type::DOUBLE: 
-            return toRegF(asmGenerator, liveInfo);
+            return toRegisterFloat(AssemblyGenerator, liveInfo);
     }
 }
 
-std::string IRTemp::toRegI(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string TemporaryValue::toRegisterInt(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     //search addrDescriptor
-    AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
+    AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
     if (addrDescriptor->atReg.size() != 0) {
         std::string reg = addrDescriptor->atReg[0];
-        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->atMemory)) {
-            asmGenerator->regDescriptorMap[reg]->operandList.erase(reinterpret_cast<IROperand*>(this));
+        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->inMem)) {
+            AssemblyGenerator->regDescriptorMap[reg]->ops.erase(reinterpret_cast<IROperand*>(this));
             addrDescriptor->atReg.clear();
         }
         return reg;
     }
     
     //not found
-    std::string reg = asmGenerator->getReg(false);
+    std::string reg = AssemblyGenerator->getReg(false);
     //add map TempReg-->reg
     if (liveInfo->usedInfo != nullptr) {
         addrDescriptor->atReg.push_back(reg);
-        asmGenerator->regDescriptorMap[reg]->operandList.insert(reinterpret_cast<IROperand*>(this));
+        AssemblyGenerator->regDescriptorMap[reg]->ops.insert(reinterpret_cast<IROperand*>(this));
     }
     
     return reg;
 }
 
-std::string IRTemp::toRegF(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string TemporaryValue::toRegisterFloat(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     //search addrDescriptor
-    AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
+    AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(reinterpret_cast<IROperand*>(this));
     if (addrDescriptor->atReg.size() != 0) {
         std::string reg = addrDescriptor->atReg[0];
-        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->atMemory)) {
-            asmGenerator->regDescriptorMap[reg]->operandList.erase(reinterpret_cast<IROperand*>(this));
+        if (liveInfo->usedInfo == nullptr && (!liveInfo->liveness || liveInfo->liveness && addrDescriptor->inMem)) {
+            AssemblyGenerator->regDescriptorMap[reg]->ops.erase(reinterpret_cast<IROperand*>(this));
             addrDescriptor->atReg.clear();
         }
         return reg;
     }
     
     //not found
-    std::string reg = asmGenerator->getReg(true);
+    std::string reg = AssemblyGenerator->getReg(true);
     //add map TempReg-->reg
     if (liveInfo->usedInfo != nullptr) {
         addrDescriptor->atReg.push_back(reg);
-        asmGenerator->regDescriptorMap[reg]->operandList.insert(reinterpret_cast<IROperand*>(this));
+        AssemblyGenerator->regDescriptorMap[reg]->ops.insert(reinterpret_cast<IROperand*>(this));
     }
     
     return reg;
 }
 
-void IRTemp::printIR(std::ofstream &irCodeFile) {
+void TemporaryValue::printIR(std::ofstream &irCodeFile) {
     irCodeFile << "%" << name;
 }
 
 //----------------- IRArrayElem ------------------------------------------------------------------
-std::string IRArrayElem::toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRArrayElem::toRegister(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     Type dataType;
     if (dynamic_cast<IrGlobalVariable*>(arrayPtr) != nullptr) 
         dataType = reinterpret_cast<IrGlobalVariable*>(arrayPtr)->dataType;
@@ -435,73 +435,73 @@ std::string IRArrayElem::toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
         dataType = reinterpret_cast<IRLocalVar*>(arrayPtr)->dataType;
     switch(dataType) {
         case Type::INT: case Type::INT_PTR: case Type::BOOL:
-            return toRegI(asmGenerator, liveInfo);
+            return toRegisterInt(AssemblyGenerator, liveInfo);
         case Type::FLOAT: case Type::FLOAT_PTR:
-            return toRegF(asmGenerator, liveInfo);
+            return toRegisterFloat(AssemblyGenerator, liveInfo);
         case Type::DOUBLE: case Type::DOUBLE_PTR:
-            return toRegD(asmGenerator, liveInfo);
+            return toRegisterDouble(AssemblyGenerator, liveInfo);
     }
 }
 
-std::string IRArrayElem::toRegI(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRArrayElem::toRegisterInt(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     if (dynamic_cast<IRLocalArray*>(arrayPtr) != nullptr) {
-        std::string displaceReg = tempPtr->toReg(asmGenerator, liveInfo->tempInfo);
-        std::string baseReg = asmGenerator->getReg(false);
-        asmGenerator->asmCodeList.push_back(std::string("add ") + baseReg + std::string(", s0, ") + displaceReg);
-        asmGenerator->asmCodeList.push_back(std::string("lw ") + baseReg + std::string(", -") + std::to_string(reinterpret_cast<IRLocalArray*>(arrayPtr)->displacement) + std::string("(") + baseReg + std::string(")"));
+        std::string displaceReg = tempPtr->toRegister(AssemblyGenerator, liveInfo->tempInfo);
+        std::string baseReg = AssemblyGenerator->getReg(false);
+        AssemblyGenerator->asmCodeList.push_back(std::string("add ") + baseReg + std::string(", s0, ") + displaceReg);
+        AssemblyGenerator->asmCodeList.push_back(std::string("lw ") + baseReg + std::string(", -") + std::to_string(reinterpret_cast<IRLocalArray*>(arrayPtr)->offset) + std::string("(") + baseReg + std::string(")"));
         return baseReg;
     }
     else {
-        std::string baseReg = arrayPtr->toReg(asmGenerator, liveInfo->arrayInfo);
-        std::string displaceReg = tempPtr->toReg(asmGenerator, liveInfo->tempInfo);
-        std::string addrReg = asmGenerator->getReg(false);
-        asmGenerator->asmCodeList.push_back("add " + addrReg + ", " + baseReg + ", " + displaceReg);
-        asmGenerator->asmCodeList.push_back("lw " + addrReg + ", " + "0(" + addrReg + ")");
+        std::string baseReg = arrayPtr->toRegister(AssemblyGenerator, liveInfo->arrayInfo);
+        std::string displaceReg = tempPtr->toRegister(AssemblyGenerator, liveInfo->tempInfo);
+        std::string addrReg = AssemblyGenerator->getReg(false);
+        AssemblyGenerator->asmCodeList.push_back("add " + addrReg + ", " + baseReg + ", " + displaceReg);
+        AssemblyGenerator->asmCodeList.push_back("lw " + addrReg + ", " + "0(" + addrReg + ")");
         return addrReg;
     }
 }
 
-std::string IRArrayElem::toRegF(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRArrayElem::toRegisterFloat(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     std::string valReg;
     if (dynamic_cast<IRLocalArray*>(arrayPtr) != nullptr) {
-        std::string displaceReg = tempPtr->toReg(asmGenerator, liveInfo->tempInfo);
-        std::string baseReg = asmGenerator->getReg(false);
-        valReg  = asmGenerator->getReg(true);
-        asmGenerator->asmCodeList.push_back("add " + baseReg + "s0, " + displaceReg);
-        asmGenerator->asmCodeList.push_back("flw " + valReg + ", -" + std::to_string(reinterpret_cast<IRLocalArray*>(arrayPtr)->displacement) + "(" + baseReg + ")");
+        std::string displaceReg = tempPtr->toRegister(AssemblyGenerator, liveInfo->tempInfo);
+        std::string baseReg = AssemblyGenerator->getReg(false);
+        valReg  = AssemblyGenerator->getReg(true);
+        AssemblyGenerator->asmCodeList.push_back("add " + baseReg + "s0, " + displaceReg);
+        AssemblyGenerator->asmCodeList.push_back("flw " + valReg + ", -" + std::to_string(reinterpret_cast<IRLocalArray*>(arrayPtr)->offset) + "(" + baseReg + ")");
     }
     else {
-        std::string baseReg = arrayPtr->toReg(asmGenerator, liveInfo->arrayInfo);
-        std::string displaceReg = tempPtr->toReg(asmGenerator, liveInfo->tempInfo);
-        std::string addrReg = asmGenerator->getReg(false);
-        valReg  = asmGenerator->getReg(true);
-        asmGenerator->asmCodeList.push_back("add " + addrReg + ", " + baseReg + ", " + displaceReg);
-        asmGenerator->asmCodeList.push_back("flw " + valReg + ", " + "0(" + addrReg + ")");
+        std::string baseReg = arrayPtr->toRegister(AssemblyGenerator, liveInfo->arrayInfo);
+        std::string displaceReg = tempPtr->toRegister(AssemblyGenerator, liveInfo->tempInfo);
+        std::string addrReg = AssemblyGenerator->getReg(false);
+        valReg  = AssemblyGenerator->getReg(true);
+        AssemblyGenerator->asmCodeList.push_back("add " + addrReg + ", " + baseReg + ", " + displaceReg);
+        AssemblyGenerator->asmCodeList.push_back("flw " + valReg + ", " + "0(" + addrReg + ")");
     }
     return valReg;
 }
 
-std::string IRArrayElem::toRegD(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
+std::string IRArrayElem::toRegisterDouble(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
     std::string valReg;
     if (dynamic_cast<IRLocalArray*>(arrayPtr) != nullptr) {
-        std::string displaceReg = tempPtr->toReg(asmGenerator, liveInfo->tempInfo);
-        std::string baseReg = asmGenerator->getReg(false);
-        valReg  = asmGenerator->getReg(true);
-        asmGenerator->asmCodeList.push_back("add " + baseReg + "s0, " + displaceReg);
-        asmGenerator->asmCodeList.push_back("fld " + valReg + ", -" + std::to_string(reinterpret_cast<IRLocalArray*>(arrayPtr)->displacement) + "(" + baseReg + ")");
+        std::string displaceReg = tempPtr->toRegister(AssemblyGenerator, liveInfo->tempInfo);
+        std::string baseReg = AssemblyGenerator->getReg(false);
+        valReg  = AssemblyGenerator->getReg(true);
+        AssemblyGenerator->asmCodeList.push_back("add " + baseReg + "s0, " + displaceReg);
+        AssemblyGenerator->asmCodeList.push_back("fld " + valReg + ", -" + std::to_string(reinterpret_cast<IRLocalArray*>(arrayPtr)->offset) + "(" + baseReg + ")");
     }
     else {
-        std::string baseReg = arrayPtr->toReg(asmGenerator, liveInfo->arrayInfo);
-        std::string displaceReg = tempPtr->toReg(asmGenerator, liveInfo->tempInfo);
-        std::string addrReg = asmGenerator->getReg(false);
-        valReg  = asmGenerator->getReg(true);
-        asmGenerator->asmCodeList.push_back("add " + addrReg + ", " + baseReg + ", " + displaceReg);
-        asmGenerator->asmCodeList.push_back("fld " + valReg + ", " + "0(" + addrReg + ")");
+        std::string baseReg = arrayPtr->toRegister(AssemblyGenerator, liveInfo->arrayInfo);
+        std::string displaceReg = tempPtr->toRegister(AssemblyGenerator, liveInfo->tempInfo);
+        std::string addrReg = AssemblyGenerator->getReg(false);
+        valReg  = AssemblyGenerator->getReg(true);
+        AssemblyGenerator->asmCodeList.push_back("add " + addrReg + ", " + baseReg + ", " + displaceReg);
+        AssemblyGenerator->asmCodeList.push_back("fld " + valReg + ", " + "0(" + addrReg + ")");
     }
     return valReg;
 }
 
-void IRArrayElem::toMem(AsmGenerator *asmGenerator, LiveInfo *liveInfo, std::string srcReg) {
+void IRArrayElem::toMem(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo, std::string srcReg) {
     std::string asmOpcode;
     Type dataType;
     if (dynamic_cast<IrGlobalVariable*>(arrayPtr) != nullptr) 
@@ -520,17 +520,17 @@ void IRArrayElem::toMem(AsmGenerator *asmGenerator, LiveInfo *liveInfo, std::str
             break; 
     }
     if (dynamic_cast<IRLocalArray*>(arrayPtr) != nullptr) {
-        std::string displaceReg = tempPtr->toReg(asmGenerator, liveInfo->tempInfo);
-        std::string baseReg = asmGenerator->getReg(false);
-        asmGenerator->asmCodeList.push_back(std::string("add ") + baseReg + std::string(", s0, ") + displaceReg);
-        asmGenerator->asmCodeList.push_back(asmOpcode + srcReg + std::string(", -") + std::to_string(reinterpret_cast<IRLocalArray*>(arrayPtr)->displacement) + "(" + baseReg + ")");
+        std::string displaceReg = tempPtr->toRegister(AssemblyGenerator, liveInfo->tempInfo);
+        std::string baseReg = AssemblyGenerator->getReg(false);
+        AssemblyGenerator->asmCodeList.push_back(std::string("add ") + baseReg + std::string(", s0, ") + displaceReg);
+        AssemblyGenerator->asmCodeList.push_back(asmOpcode + srcReg + std::string(", -") + std::to_string(reinterpret_cast<IRLocalArray*>(arrayPtr)->offset) + "(" + baseReg + ")");
     }
     else {
-        std::string baseReg = arrayPtr->toReg(asmGenerator, liveInfo->arrayInfo);
-        std::string displaceReg = tempPtr->toReg(asmGenerator, liveInfo->tempInfo);
-        std::string addrReg = asmGenerator->getReg(false);
-        asmGenerator->asmCodeList.push_back(std::string("add ") + addrReg + std::string(", ") + baseReg + std::string(", ") + displaceReg);
-        asmGenerator->asmCodeList.push_back(asmOpcode + srcReg + std::string(", ") + std::string("0(") + addrReg + std::string(")"));
+        std::string baseReg = arrayPtr->toRegister(AssemblyGenerator, liveInfo->arrayInfo);
+        std::string displaceReg = tempPtr->toRegister(AssemblyGenerator, liveInfo->tempInfo);
+        std::string addrReg = AssemblyGenerator->getReg(false);
+        AssemblyGenerator->asmCodeList.push_back(std::string("add ") + addrReg + std::string(", ") + baseReg + std::string(", ") + displaceReg);
+        AssemblyGenerator->asmCodeList.push_back(asmOpcode + srcReg + std::string(", ") + std::string("0(") + addrReg + std::string(")"));
     }
 }
 
@@ -540,15 +540,15 @@ void IRArrayElem::printIR(std::ofstream &irCodeFile) {
     tempPtr->printIR(irCodeFile);
 }
 
-LiveInfo* IRArrayElem::setLiveInfo(BasicBlock *basicBlock) {
-    LiveInfo *ArrayLiveInfo = basicBlock->searchLivenessMap(this->arrayPtr);
-    LiveInfo *TempLiveInfo  = basicBlock->searchLivenessMap(this->tempPtr);
-    return new LiveInfo(ArrayLiveInfo, TempLiveInfo);
+LifetimeInfo* IRArrayElem::setLifetimeInfo(BasicBlock *basicBlock) {
+    LifetimeInfo *ArrayLifetimeInfo = basicBlock->findLiveInfo(this->arrayPtr);
+    LifetimeInfo *TempLifetimeInfo  = basicBlock->findLiveInfo(this->tempPtr);
+    return new LifetimeInfo(ArrayLifetimeInfo, TempLifetimeInfo);
 }
 
-void IRArrayElem::calLiveInfo(BasicBlock *basicBlock, bool liveness, IRCode *usedInfo) {
-    arrayPtr->calLiveInfo(basicBlock, true, usedInfo);
-    tempPtr->calLiveInfo(basicBlock, true, usedInfo);
+void IRArrayElem::calculateLiveness(BasicBlock *basicBlock, bool liveness, IntermediateCode *usedInfo) {
+    arrayPtr->calculateLiveness(basicBlock, true, usedInfo);
+    tempPtr->calculateLiveness(basicBlock, true, usedInfo);
 }
 
 IROperand *IRArrayElem::getSrc() {
@@ -560,11 +560,11 @@ IROperand *IRArrayElem::getDisplace() {
 }
 
 //----------------- IRArrayAddr ------------------------------------------------------------------
-std::string IRArrayAddr::toReg(AsmGenerator *asmGenerator, LiveInfo *liveInfo) {
-    std::string baseAddr = arrayPtr->toReg(asmGenerator, liveInfo->arrayInfo);
-    std::string displaceReg = tempPtr->toReg(asmGenerator, liveInfo->tempInfo);
-    std::string addrReg = asmGenerator->getReg(false);
-    asmGenerator->asmCodeList.push_back("add " + addrReg + ", " + baseAddr + ", " + displaceReg);
+std::string IRArrayAddr::toRegister(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) {
+    std::string baseAddr = arrayPtr->toRegister(AssemblyGenerator, liveInfo->arrayInfo);
+    std::string displaceReg = tempPtr->toRegister(AssemblyGenerator, liveInfo->tempInfo);
+    std::string addrReg = AssemblyGenerator->getReg(false);
+    AssemblyGenerator->asmCodeList.push_back("add " + addrReg + ", " + baseAddr + ", " + displaceReg);
     return addrReg;
 }
 
@@ -574,10 +574,10 @@ void IRArrayAddr::printIR(std::ofstream &irCodeFile) {
     tempPtr->printIR(irCodeFile);
 }
 
-LiveInfo* IRArrayAddr::setLiveInfo(BasicBlock *basicBlock) {
-    LiveInfo *ArrayLiveInfo = basicBlock->searchLivenessMap(this->arrayPtr);
-    LiveInfo *TempLiveInfo  = basicBlock->searchLivenessMap(this->tempPtr);
-    return new LiveInfo(ArrayLiveInfo, TempLiveInfo);
+LifetimeInfo* IRArrayAddr::setLifetimeInfo(BasicBlock *basicBlock) {
+    LifetimeInfo *ArrayLifetimeInfo = basicBlock->findLiveInfo(this->arrayPtr);
+    LifetimeInfo *TempLifetimeInfo  = basicBlock->findLiveInfo(this->tempPtr);
+    return new LifetimeInfo(ArrayLifetimeInfo, TempLifetimeInfo);
 }
 
 IROperand *IRArrayAddr::getSrc() {
@@ -589,9 +589,9 @@ IROperand *IRArrayAddr::getDisplace() {
 }
 
 //----------------- IRLabel ------------------------------------------------------------------
-void IRArrayAddr::calLiveInfo(BasicBlock *basicBlock, bool liveness, IRCode *usedInfo) {
-    arrayPtr->calLiveInfo(basicBlock, true, usedInfo);
-    tempPtr->calLiveInfo(basicBlock, true, usedInfo);
+void IRArrayAddr::calculateLiveness(BasicBlock *basicBlock, bool liveness, IntermediateCode *usedInfo) {
+    arrayPtr->calculateLiveness(basicBlock, true, usedInfo);
+    tempPtr->calculateLiveness(basicBlock, true, usedInfo);
 }
 
 //----------------- IRLabel ------------------------------------------------------------------
@@ -605,15 +605,15 @@ void IRFunc::printIR(std::ofstream &irCodeFile) {
 }
 
 //----------------- IROperand ------------------------------------------------------------------
-LiveInfo* IROperand::setLiveInfo(BasicBlock *basicBlock) {
-    return basicBlock->searchLivenessMap(this);
+LifetimeInfo* IROperand::setLifetimeInfo(BasicBlock *basicBlock) {
+    return basicBlock->findLiveInfo(this);
 }
 
-void IROperand::calLiveInfo(BasicBlock *basicBlock, bool liveness, IRCode *usedInfo) {
-    basicBlock->livenessMap[this]  = new LiveInfo(liveness, usedInfo);
+void IROperand::calculateLiveness(BasicBlock *basicBlock, bool liveness, IntermediateCode *usedInfo) {
+    basicBlock->livenessMap[this]  = new LifetimeInfo(liveness, usedInfo);
 }
 
-void IROperand::toArgReg(AsmGenerator *asmGenerator, int num, std::string srcReg) {
+void IROperand::argReg(AssemblyCodeGenerator *AssemblyGenerator, int num, std::string srcReg) {
     std::string reg;
     std::string asmOpcode;
     if (dynamic_cast<IRArrayElem*>(this) != nullptr) {
@@ -678,12 +678,12 @@ void IROperand::toArgReg(AsmGenerator *asmGenerator, int num, std::string srcReg
             asmOpcode = "mv ";
         }
     }
-    else if (dynamic_cast<IRTemp*>(this) != nullptr) {
-        if (reinterpret_cast<IRTemp*>(this)->dataType == FLOAT) {
+    else if (dynamic_cast<TemporaryValue*>(this) != nullptr) {
+        if (reinterpret_cast<TemporaryValue*>(this)->dataType == FLOAT) {
             reg = "fa" + std::to_string(num);
             asmOpcode = "fmv.s ";
         }
-        else if (reinterpret_cast<IRTemp*>(this)->dataType == DOUBLE) {
+        else if (reinterpret_cast<TemporaryValue*>(this)->dataType == DOUBLE) {
             reg = "fa" + std::to_string(num);
             asmOpcode = "fmv.d ";
         }
@@ -692,12 +692,12 @@ void IROperand::toArgReg(AsmGenerator *asmGenerator, int num, std::string srcReg
             asmOpcode = "mv ";
         }
     }
-    else if (dynamic_cast<IRImmediate*>(this) != nullptr) {
-        if (reinterpret_cast<IRImmediate*>(this)->dataType == FLOAT) {
+    else if (dynamic_cast<IRImmediateValue*>(this) != nullptr) {
+        if (reinterpret_cast<IRImmediateValue*>(this)->dataType == FLOAT) {
             reg = "fa" + std::to_string(num);
             asmOpcode = "fmv.s ";
         }
-        else if (reinterpret_cast<IRImmediate*>(this)->dataType == DOUBLE) {
+        else if (reinterpret_cast<IRImmediateValue*>(this)->dataType == DOUBLE) {
             reg = "fa" + std::to_string(num);
             asmOpcode = "fmv.d ";
         }
@@ -706,5 +706,5 @@ void IROperand::toArgReg(AsmGenerator *asmGenerator, int num, std::string srcReg
             asmOpcode = "mv ";
         }
     }
-    asmGenerator->asmCodeList.push_back(asmOpcode + reg + std::string(", ") + srcReg);
+    AssemblyGenerator->asmCodeList.push_back(asmOpcode + reg + std::string(", ") + srcReg);
 }

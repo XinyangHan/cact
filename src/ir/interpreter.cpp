@@ -1,70 +1,70 @@
 #include "include/ir/Interpret.h"
 #include <iostream>
 
-std::any InterpretBool::getValue(int displacement, int base) {
-    if (value[displacement + base])
+std::any InterpretBool::getValue(int offset, int base) {
+    if (value[offset + base])
         return true;
     else
         return false;
 }
 
-void InterpretBool::setValue(std::any newVal, int displacement, int base) {
-    value[displacement + base] = std::any_cast<bool>(newVal);
+void InterpretBool::setValue(std::any newVal, int offset, int base) {
+    value[offset + base] = std::any_cast<bool>(newVal);
 }
 
-std::any InterpretInt::getValue(int displacement, int base) {
-    return value[(displacement + base) >> 2];
+std::any InterpretInt::getValue(int offset, int base) {
+    return value[(offset + base) >> 2];
 }
 
-void InterpretInt::setValue(std::any newVal, int displacement, int base) {
-    value[(displacement + base) >> 2] = std::any_cast<int>(newVal);
+void InterpretInt::setValue(std::any newVal, int offset, int base) {
+    value[(offset + base) >> 2] = std::any_cast<int>(newVal);
 }
 
-std::any InterpretFloat::getValue(int displacement, int base) {
-    return value[(displacement + base) >> 2];
+std::any InterpretFloat::getValue(int offset, int base) {
+    return value[(offset + base) >> 2];
 }
 
-void InterpretFloat::setValue(std::any newVal, int displacement, int base) {
-    value[(displacement + base) >> 2] = std::any_cast<float>(newVal);
+void InterpretFloat::setValue(std::any newVal, int offset, int base) {
+    value[(offset + base) >> 2] = std::any_cast<float>(newVal);
 }
 
-std::any InterpretDouble::getValue(int displacement, int base) {
-    return value[(displacement + base) >> 3];
+std::any InterpretDouble::getValue(int offset, int base) {
+    return value[(offset + base) >> 3];
 }
 
-void InterpretDouble::setValue(std::any newVal, int displacement, int base) {
-    value[(displacement + base) >> 3] = std::any_cast<double>(newVal);
+void InterpretDouble::setValue(std::any newVal, int offset, int base) {
+    value[(offset + base) >> 3] = std::any_cast<double>(newVal);
 }
 
-std::any InterpretTemp::getValue(int displacement, int base) {
+std::any InterpretTemp::getValue(int offset, int base) {
     return value;
 }
 
-void IRInterpretor::interpretIRCode(std::ofstream &interpretFile, std::vector<IRCode*> &irCodeList, std::map<std::string, IROperand*> &immediatePool) {
+void IntermediateInterpreter::interpretIntermediateCode(std::ofstream &interpretFile, std::vector<IntermediateCode*> &irCodeList, std::map<std::string, IROperand*> &immediatePool) {
     int i;
-    IRCode *nextIR;
+    IntermediateCode *nextIR;
     for (i = 0; i < irCodeList.size()-1; i++) {
         irCodeList[i]->nextIR = irCodeList[i+1];
-        irCodeList[i]->findMain(this, &nextIR);
+        irCodeList[i]->locateMainFunction(this, &nextIR);
     }
-    irCodeList[i]->findMain(this, &nextIR);
+    irCodeList[i]->locateMainFunction(this, &nextIR);
     
     for (auto it = immediatePool.begin(); it != immediatePool.end(); it++) {
-        std::any value = getImmediateVal(reinterpret_cast<IRImmediate*>(it->second));
+        std::any value = fetchImmediateValue(reinterpret_cast<IRImmediateValue*>(it->second));
         immMap[it->second] = new InterpretImm(value);
     }
     
-    currStack = new IRStack(currStack);  //fake stack, who invokes main? 
+    currStack = new IntermediateStack(currStack);  //fake stack, who invokes main? 
     currStack->calleeReturnVal = new InterpretTemp(0);
     
     while (nextIR != nullptr) {
-        nextIR = nextIR->interpretIRCode(interpretFile, this);
+        nextIR = nextIR->interpretIntermediateCode(interpretFile, this);
     }
     int mainReturnVal = std::any_cast<int>(reinterpret_cast<InterpretTemp*>(currStack->calleeReturnVal)->value);
     std::cout << "程序返回值: " << mainReturnVal << std::endl;
 }
 
-std::any IRInterpretor::getImmediateVal(IRImmediate* immediate) {
+std::any IntermediateInterpreter::fetchImmediateValue(IRImmediateValue* immediate) {
     switch (immediate->dataType) {
         case INT:    {
             int val;

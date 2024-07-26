@@ -184,7 +184,7 @@ bool operator!=(const std::any& src1, const std::any& src2) {
     return result;
 }
 
-void IRCode::print(std::ofstream &irCodeFile) {
+void IntermediateCode::print(std::ofstream &irCodeFile) {
     switch(opCode) {
         case IR_G_ALLOC:
             irCodeFile << "IR_G_ALLOC ";
@@ -426,7 +426,7 @@ void IRCode::print(std::ofstream &irCodeFile) {
     }
 }
 
-void IRCode::findMain(IRInterpretor *irInterpretor, IRCode **entryPoint) {
+void IntermediateCode::locateMainFunction(IntermediateInterpreter *irInterpretor, IntermediateCode **entryPoint) {
     switch(opCode) {
         case IR_G_ALLOC:
         {
@@ -437,7 +437,7 @@ void IRCode::findMain(IRInterpretor *irInterpretor, IRCode **entryPoint) {
                     newIP = new InterpretInt(len);
                     for(int i = 0; i < len; i++) {
                         IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         if(castImm->val[0] == '0' && (castImm->val[1] == 'x' || castImm->val[1] == 'X') || (castImm->val[0] == '-' && castImm->val[1] == '0' && (castImm->val[2] == 'x' || castImm->val[2] == 'X'))) {
                             reinterpret_cast<InterpretInt*>(newIP)->value.push_back(std::stoi(castImm->val, 0, 16));
                         }
@@ -453,7 +453,7 @@ void IRCode::findMain(IRInterpretor *irInterpretor, IRCode **entryPoint) {
                     newIP = new InterpretFloat(len);
                     for(int i = 0; i < len; i++) {
                         IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         reinterpret_cast<InterpretFloat*>(newIP)->value.push_back(std::stof(castImm->val));
                     }
                     break;
@@ -461,7 +461,7 @@ void IRCode::findMain(IRInterpretor *irInterpretor, IRCode **entryPoint) {
                     newIP = new InterpretDouble(len);
                     for(int i = 0; i < len; i++) {
                         IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         reinterpret_cast<InterpretDouble*>(newIP)->value.push_back(std::stod(castImm->val));
                     }
                     break;
@@ -469,7 +469,7 @@ void IRCode::findMain(IRInterpretor *irInterpretor, IRCode **entryPoint) {
                     newIP = new InterpretBool(len);
                     for(int i = 0; i < len; i++) {
                         IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         reinterpret_cast<InterpretBool*>(newIP)->value.push_back(castImm->val == "true");
                     }
                     break;
@@ -500,7 +500,7 @@ void IRCode::findMain(IRInterpretor *irInterpretor, IRCode **entryPoint) {
     }
 }
 
-IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irInterpretor) {
+IntermediateCode *IntermediateCode::interpretIntermediateCode(std::ofstream &interpretFile, IntermediateInterpreter *irInterpretor) {
     IROperand *operand1, *operand2;
     IROperand *displace1, *displace2;
     int displaceNum1 = 0, displaceNum2 = 0;
@@ -517,7 +517,7 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
                     newIP = new InterpretInt(len);
                     for(int i = 0; i < len; i++) {
                         IRLocalVar  *castDst = reinterpret_cast<IRLocalVar*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         if(castImm->val[0] == '0' && (castImm->val[1] == 'x' || castImm->val[1] == 'X') || (castImm->val[0] == '-' && castImm->val[1] == '0' && (castImm->val[2] == 'x' || castImm->val[2] == 'X'))) {
                             reinterpret_cast<InterpretInt*>(newIP)->value.push_back(std::stoi(castImm->val, 0, 16));
                         }
@@ -533,7 +533,7 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
                     newIP = new InterpretFloat(len);
                     for(int i = 0; i < len; i++) {
                         IRLocalVar  *castDst = reinterpret_cast<IRLocalVar*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         reinterpret_cast<InterpretFloat*>(newIP)->value.push_back(std::stof(castImm->val));
                     }
                     break;
@@ -541,7 +541,7 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
                     newIP = new InterpretDouble(len);
                     for(int i = 0; i < len; i++) {
                         IRLocalVar  *castDst = reinterpret_cast<IRLocalVar*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         reinterpret_cast<InterpretDouble*>(newIP)->value.push_back(std::stod(castImm->val));
                     }
                     break;
@@ -549,7 +549,7 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
                     newIP = new InterpretBool(len);
                     for(int i = 0; i < len; i++) {
                         IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         reinterpret_cast<InterpretBool*>(newIP)->value.push_back(castImm->val == "true");
                     }
                     break;
@@ -570,13 +570,13 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace2 != nullptr) {
                 displaceNum2 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace2]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 r1 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
                 r1 = irInterpretor->currStack->interpretMap[operand1]->getValue(displaceNum1, irInterpretor->currStack->baseMap[operand1]);
             }
-            if (dynamic_cast<IRImmediate*>(operand2) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand2) != nullptr) {
                 r2 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand2])->getValue();
             }
             else {
@@ -604,13 +604,13 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace2 != nullptr) {
                 displaceNum2 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace2]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 r1 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
                 r1 = irInterpretor->currStack->interpretMap[operand1]->getValue(displaceNum1, irInterpretor->currStack->baseMap[operand1]);
             }
-            if (dynamic_cast<IRImmediate*>(operand2) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand2) != nullptr) {
                 r2 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand2])->getValue();
             }
             else {
@@ -638,13 +638,13 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace2 != nullptr) {
                 displaceNum2 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace2]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 r1 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
                 r1 = irInterpretor->currStack->interpretMap[operand1]->getValue(displaceNum1, irInterpretor->currStack->baseMap[operand1]);
             }
-            if (dynamic_cast<IRImmediate*>(operand2) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand2) != nullptr) {
                 r2 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand2])->getValue();
             }
             else {
@@ -672,13 +672,13 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace2 != nullptr) {
                 displaceNum2 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace2]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 r1 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
                 r1 = irInterpretor->currStack->interpretMap[operand1]->getValue(displaceNum1, irInterpretor->currStack->baseMap[operand1]);
             }
-            if (dynamic_cast<IRImmediate*>(operand2) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand2) != nullptr) {
                 r2 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand2])->getValue();
             }
             else {
@@ -701,7 +701,7 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace1 != nullptr) {
                 displaceNum1 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace1]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 r1 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
@@ -729,13 +729,13 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace2 != nullptr) {
                 displaceNum2 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace2]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 r1 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
                 r1 = irInterpretor->currStack->interpretMap[operand1]->getValue(displaceNum1, irInterpretor->currStack->baseMap[operand1]);
             }
-            if (dynamic_cast<IRImmediate*>(operand2) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand2) != nullptr) {
                 r2 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand2])->getValue();
             }
             else {
@@ -765,13 +765,13 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace2 != nullptr) {
                 displaceNum2 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace2]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 r1 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
                 r1 = irInterpretor->currStack->interpretMap[operand1]->getValue(displaceNum1, irInterpretor->currStack->baseMap[operand1]);
             }
-            if (dynamic_cast<IRImmediate*>(operand2) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand2) != nullptr) {
                 r2 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand2])->getValue();
             }
             else {
@@ -801,13 +801,13 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace2 != nullptr) {
                 displaceNum2 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace2]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 r1 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
                 r1 = irInterpretor->currStack->interpretMap[operand1]->getValue(displaceNum1, irInterpretor->currStack->baseMap[operand1]);
             }
-            if (dynamic_cast<IRImmediate*>(operand2) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand2) != nullptr) {
                 r2 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand2])->getValue();
             }
             else {
@@ -837,13 +837,13 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace2 != nullptr) {
                 displaceNum2 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace2]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 r1 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
                 r1 = irInterpretor->currStack->interpretMap[operand1]->getValue(displaceNum1, irInterpretor->currStack->baseMap[operand1]);
             }
-            if (dynamic_cast<IRImmediate*>(operand2) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand2) != nullptr) {
                 r2 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand2])->getValue();
             }
             else {
@@ -873,13 +873,13 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace2 != nullptr) {
                 displaceNum2 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace2]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 r1 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
                 r1 = irInterpretor->currStack->interpretMap[operand1]->getValue(displaceNum1, irInterpretor->currStack->baseMap[operand1]);
             }
-            if (dynamic_cast<IRImmediate*>(operand2) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand2) != nullptr) {
                 r2 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand2])->getValue();
             }
             else {
@@ -909,13 +909,13 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace2 != nullptr) {
                 displaceNum2 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace2]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 r1 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
                 r1 = irInterpretor->currStack->interpretMap[operand1]->getValue(displaceNum1, irInterpretor->currStack->baseMap[operand1]);
             }
-            if (dynamic_cast<IRImmediate*>(operand2) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand2) != nullptr) {
                 r2 = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand2])->getValue();
             }
             else {
@@ -953,7 +953,7 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             if (displace2 != nullptr) {
                 displaceNum2 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace2]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand2) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand2) != nullptr) {
                 result = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand2])->getValue();
             }
             else {
@@ -977,7 +977,7 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
                 }
                 displaceNum1 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace1]->getValue(0, 0));
             }
-            if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+            if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                 result = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
             }
             else {
@@ -1053,7 +1053,7 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
             //for debug
             interpretFile << "invoke " << reinterpret_cast<IRFunc*>(dst)->funcSymbol->getSymbolName() << std::endl;
             
-            irInterpretor->currStack = new IRStack(irInterpretor->currStack);
+            irInterpretor->currStack = new IntermediateStack(irInterpretor->currStack);
             for (auto it = irInterpretor->globlMap.begin(); it != irInterpretor->globlMap.end(); it++) {
                 irInterpretor->currStack->interpretMap[it->first] = it->second;
                 irInterpretor->currStack->baseMap[it->first] = 0;
@@ -1104,7 +1104,7 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
                 if (displace1 != nullptr) {
                     displaceNum1 = std::any_cast<int>(irInterpretor->currStack->interpretMap[displace1]->getValue(0, 0));
                 }
-                if (dynamic_cast<IRImmediate*>(operand1) != nullptr) {
+                if (dynamic_cast<IRImmediateValue*>(operand1) != nullptr) {
                     result = reinterpret_cast<InterpretImm*>(irInterpretor->immMap[operand1])->getValue();
                 }
                 else {
@@ -1122,7 +1122,7 @@ IRCode *IRCode::interpretIRCode(std::ofstream &interpretFile, IRInterpretor *irI
     }
 }
 
-void IRCode::generateDag(BasicBlock *basicBlock) {
+void IntermediateCode::createDAG(BasicBlock *basicBlock) {
     switch(opCode) {
         DagNode *node1;
         DagNode *node2;
@@ -1138,7 +1138,7 @@ void IRCode::generateDag(BasicBlock *basicBlock) {
             if (it != basicBlock->operand2DagNode.end()) {
                 it->second->relatedSet.erase(dst);
             }
-            node1 = basicBlock->searchOperand2DagNode(src1);
+            node1 = basicBlock->findDagNode(src1);
             if (dynamic_cast<IRArrayElem*>(dst) != nullptr) {
                 auto newDagNode = new DagInnerNode(dataType, opCode, node1, nullptr);
                 newDagNode->basicBlock = basicBlock;
@@ -1167,8 +1167,8 @@ void IRCode::generateDag(BasicBlock *basicBlock) {
         case IR_DIV: case IR_MOD: case IR_AND:
         case IR_OR:  case IR_SLT: case IR_SLTE:
         {
-            node1 = basicBlock->searchOperand2DagNode(src1);
-            node2 = basicBlock->searchOperand2DagNode(src2);
+            node1 = basicBlock->findDagNode(src1);
+            node2 = basicBlock->findDagNode(src2);
             for (auto dagNode : basicBlock->dagNodeList) {
                 if (dagNode->opCode == opCode && node1 == dagNode->lchild && node2 == dagNode->rchild) {
                     basicBlock->operand2DagNode.insert({dst, dagNode});
@@ -1185,7 +1185,7 @@ void IRCode::generateDag(BasicBlock *basicBlock) {
         }
         case IR_NOT: case IR_NEG:
         {
-            node1 = basicBlock->searchOperand2DagNode(src1);
+            node1 = basicBlock->findDagNode(src1);
             for (auto dagNode : basicBlock->dagNodeList) {
                 if (dagNode->opCode == opCode && node1 == dagNode->lchild) {
                     basicBlock->operand2DagNode.insert({dst, dagNode});
@@ -1203,8 +1203,8 @@ void IRCode::generateDag(BasicBlock *basicBlock) {
         case IR_BLT: case IR_BLE: case IR_BGT:
         case IR_BGE: case IR_BEQ: case IR_BNE:
         {
-            node1 = basicBlock->searchOperand2DagNode(src1);
-            node2 = basicBlock->searchOperand2DagNode(src2);
+            node1 = basicBlock->findDagNode(src1);
+            node2 = basicBlock->findDagNode(src2);
             auto newDagNode = new DagInnerNode(dataType, opCode, node1, node2);
             newDagNode->basicBlock = basicBlock;
             newDagNode->label = dst;
@@ -1214,67 +1214,67 @@ void IRCode::generateDag(BasicBlock *basicBlock) {
     }
 }
 
-void IRCode::calLiveInfo(BasicBlock *basicBlock) {
+void IntermediateCode::calculateLiveness(BasicBlock *basicBlock) {
     switch(opCode) {
         case IR_ADD: case IR_SUB: case IR_MUL:
         case IR_DIV: case IR_MOD: case IR_AND:
         case IR_OR:  case IR_SLT: case IR_SLTE:
         {
-            dstInfo  = dst->setLiveInfo(basicBlock);
-            src1Info = src1->setLiveInfo(basicBlock);
-            src2Info = src2->setLiveInfo(basicBlock);
+            dstInfo  = dst->setLifetimeInfo(basicBlock);
+            src1Info = src1->setLifetimeInfo(basicBlock);
+            src2Info = src2->setLifetimeInfo(basicBlock);
             
-            dst->calLiveInfo(basicBlock, false, nullptr);
-            src1->calLiveInfo(basicBlock, true, this);
-            src2->calLiveInfo(basicBlock, true, this);
+            dst->calculateLiveness(basicBlock, false, nullptr);
+            src1->calculateLiveness(basicBlock, true, this);
+            src2->calculateLiveness(basicBlock, true, this);
             break;
         }
         case IR_NOT: case IR_NEG: case IR_ASSIGN:
         {
-            dstInfo  = dst->setLiveInfo(basicBlock);
-            src1Info = src1->setLiveInfo(basicBlock);
+            dstInfo  = dst->setLifetimeInfo(basicBlock);
+            src1Info = src1->setLifetimeInfo(basicBlock);
             
             if (dynamic_cast<IRArrayElem*>(dst) != nullptr) {
-                dst->calLiveInfo(basicBlock, false, this);
+                dst->calculateLiveness(basicBlock, false, this);
             }
             else {
-                dst->calLiveInfo(basicBlock, false, nullptr);
+                dst->calculateLiveness(basicBlock, false, nullptr);
             }
-            src1->calLiveInfo(basicBlock, true, this);
+            src1->calculateLiveness(basicBlock, true, this);
             break;
         }
         case IR_G_ALLOC: case IR_L_ALLOC:
         {
-            dstInfo = dst->setLiveInfo(basicBlock);
+            dstInfo = dst->setLifetimeInfo(basicBlock);
             break;
         }
         case IR_PARAM:
         {
-            dstInfo = dst->setLiveInfo(basicBlock);
-            dst->calLiveInfo(basicBlock, true, this);
+            dstInfo = dst->setLifetimeInfo(basicBlock);
+            dst->calculateLiveness(basicBlock, true, this);
             break;
         }
         case IR_CALL:
         {
             if (src1 != nullptr)
-                src1->setLiveInfo(basicBlock);
+                src1->setLifetimeInfo(basicBlock);
             break;
         }
         case IR_BLT: case IR_BLE: case IR_BGT:
         case IR_BGE: case IR_BEQ: case IR_BNE:
         {
-            src1Info = src1->setLiveInfo(basicBlock);
-            src2Info = src2->setLiveInfo(basicBlock);
+            src1Info = src1->setLifetimeInfo(basicBlock);
+            src2Info = src2->setLifetimeInfo(basicBlock);
             
-            src1->calLiveInfo(basicBlock, true, this);
-            src2->calLiveInfo(basicBlock, true, this);
+            src1->calculateLiveness(basicBlock, true, this);
+            src2->calculateLiveness(basicBlock, true, this);
             break;
         }
         case IR_RETURN:
         {
             if (dst != nullptr) {
-                dstInfo  = dst->setLiveInfo(basicBlock);
-                dst->calLiveInfo(basicBlock, true, this);
+                dstInfo  = dst->setLifetimeInfo(basicBlock);
+                dst->calculateLiveness(basicBlock, true, this);
             }
             break;
         }
@@ -1283,16 +1283,16 @@ void IRCode::calLiveInfo(BasicBlock *basicBlock) {
     }
 }
 
-void IRCode::calStackDisplacement(AsmGenerator *asmGenerator) {
+void IntermediateCode::calculateStackOffset(AssemblyCodeGenerator *AssemblyGenerator) {
     int alignSize;
     int byteSize;
     switch(opCode) {
         case IR_FUNC_START:
         {
-            if (asmGenerator->opt == 1)
-                asmGenerator->stackFrame = 48;
+            if (AssemblyGenerator->opt == 1)
+                AssemblyGenerator->stackFrame = 48;
             else
-                asmGenerator->stackFrame = 104;
+                AssemblyGenerator->stackFrame = 104;
             for (auto param : reinterpret_cast<IRFunc*>(dst)->funcSymbol->getParams()) {
                 switch(reinterpret_cast<IRLocalVar*>(param->getIROperand())->dataType) {
                     case BOOL:
@@ -1306,9 +1306,9 @@ void IRCode::calStackDisplacement(AsmGenerator *asmGenerator) {
                         alignSize = 8;
                         break;
                 }  
-                asmGenerator->stackFrame = asmGenerator->roundUp(asmGenerator->stackFrame, alignSize);  
-                asmGenerator->stackFrame += alignSize;  
-                reinterpret_cast<IRLocalVar*>(param->getIROperand())->displacement = asmGenerator->stackFrame;
+                AssemblyGenerator->stackFrame = AssemblyGenerator->roundUp(AssemblyGenerator->stackFrame, alignSize);  
+                AssemblyGenerator->stackFrame += alignSize;  
+                reinterpret_cast<IRLocalVar*>(param->getIROperand())->offset = AssemblyGenerator->stackFrame;
             }
             break;
         }
@@ -1331,15 +1331,15 @@ void IRCode::calStackDisplacement(AsmGenerator *asmGenerator) {
             if (reinterpret_cast<IRLocalVar*>(dst)->len > 1) {
                 alignSize = 8;
             }
-            asmGenerator->stackFrame += byteSize * reinterpret_cast<IRLocalVar*>(dst)->len;
-            asmGenerator->stackFrame = asmGenerator->roundUp(asmGenerator->stackFrame, alignSize);
-            reinterpret_cast<IRLocalVar*>(dst)->displacement = asmGenerator->stackFrame;             
+            AssemblyGenerator->stackFrame += byteSize * reinterpret_cast<IRLocalVar*>(dst)->len;
+            AssemblyGenerator->stackFrame = AssemblyGenerator->roundUp(AssemblyGenerator->stackFrame, alignSize);
+            reinterpret_cast<IRLocalVar*>(dst)->offset = AssemblyGenerator->stackFrame;             
             break;
         }
         case IR_FUNC_END:
         {
-            asmGenerator->stackFrame = asmGenerator->roundUp(asmGenerator->stackFrame, 16);
-            reinterpret_cast<IRFunc*>(dst)->stackSize = asmGenerator->stackFrame;
+            AssemblyGenerator->stackFrame = AssemblyGenerator->roundUp(AssemblyGenerator->stackFrame, 16);
+            reinterpret_cast<IRFunc*>(dst)->stackSize = AssemblyGenerator->stackFrame;
             break;
         }
         default:
@@ -1347,21 +1347,21 @@ void IRCode::calStackDisplacement(AsmGenerator *asmGenerator) {
     }
 }
 
-void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
+void IntermediateCode::generateAssembly(AssemblyCodeGenerator *AssemblyGenerator) {
     //std::ofstream asmdebug;
     //asmdebug.open("./asmdebug.S");
-    //asmGenerator->printAsmcode(asmdebug);
+    //AssemblyGenerator->printAssemblycode(asmdebug);
     //asmdebug.close();
     std::string asmOpCode;
     std::string tmp;
     switch(opCode) {
         case IR_G_ALLOC:
         {
-            asmGenerator->asmDataList.push_back(std::string(".globl ") + std::string("GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name));
+            AssemblyGenerator->asmDataList.push_back(std::string(".globl ") + std::string("GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name));
             if (dst->zero)
-                asmGenerator->asmDataList.push_back(".bss");
+                AssemblyGenerator->asmDataList.push_back(".bss");
             else
-                asmGenerator->asmDataList.push_back(".data");
+                AssemblyGenerator->asmDataList.push_back(".data");
             int len = reinterpret_cast<IrGlobalVariable*>(dst)->len;
             int alignSize;
             int dataLen;
@@ -1381,12 +1381,12 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
             }
             if (len > 1)
                 alignSize = 3;
-            asmGenerator->asmDataList.push_back(std::string(".align") + std::string(" ") + std::to_string(alignSize));
-            asmGenerator->asmDataList.push_back(std::string(".type GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name) + std::string(", @object"));
-            asmGenerator->asmDataList.push_back(std::string(".size GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name) + std::string(", ") + std::to_string(len * dataLen));
-            asmGenerator->asmDataList.push_back(std::string("GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name) + std::string(":"));
+            AssemblyGenerator->asmDataList.push_back(std::string(".align") + std::string(" ") + std::to_string(alignSize));
+            AssemblyGenerator->asmDataList.push_back(std::string(".type GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name) + std::string(", @object"));
+            AssemblyGenerator->asmDataList.push_back(std::string(".size GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name) + std::string(", ") + std::to_string(len * dataLen));
+            AssemblyGenerator->asmDataList.push_back(std::string("GVar") + std::to_string(reinterpret_cast<IrGlobalVariable*>(dst)->name) + std::string(":"));
             if (dst->zero) {
-                asmGenerator->asmDataList.push_back(std::string(".zero ") + std::to_string(len * dataLen) + std::string("\n"));
+                AssemblyGenerator->asmDataList.push_back(std::string(".zero ") + std::to_string(len * dataLen) + std::string("\n"));
                 return;
             }
             
@@ -1394,18 +1394,18 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 case INT:
                     for(int i = 0; i < len; i++) {
                         IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
-                        asmGenerator->asmDataList.push_back(std::string(".word ") + std::string(castImm->val));
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
+                        AssemblyGenerator->asmDataList.push_back(std::string(".word ") + std::string(castImm->val));
                     }
                     break;
                 case FLOAT:
                 {
                     for(int i = 0; i < len; i++) {
                         IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         float fval = std::stof(castImm->val);
                         int dval = *(int *)&fval;
-                        asmGenerator->asmDataList.push_back(std::string(".word ") + std::to_string(dval));
+                        AssemblyGenerator->asmDataList.push_back(std::string(".word ") + std::to_string(dval));
                     }
                     break;
                 }
@@ -1413,10 +1413,10 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 { 
                     for(int i = 0; i < len; i++) {
                         IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         double fval = std::stod(castImm->val);
                         long long dval = *(long long *)&fval;
-                        asmGenerator->asmDataList.push_back(std::string(".dword ") + std::to_string(dval));
+                        AssemblyGenerator->asmDataList.push_back(std::string(".dword ") + std::to_string(dval));
                     }
                     break;
                 }
@@ -1424,11 +1424,11 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 {
                     for(int i = 0; i < len; i++) {
                         IrGlobalVariable  *castDst = reinterpret_cast<IrGlobalVariable*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         if (castImm->val == "true")
-                            asmGenerator->asmDataList.push_back(std::string(".word ") + std::string("1"));
+                            AssemblyGenerator->asmDataList.push_back(std::string(".word ") + std::string("1"));
                         else
-                            asmGenerator->asmDataList.push_back(std::string(".word ") + std::string("0"));
+                            AssemblyGenerator->asmDataList.push_back(std::string(".word ") + std::string("0"));
                     }
                     break;
                 }
@@ -1441,17 +1441,17 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
             int dataLen;
             int alignSize;
             if (dataType == INT) {
-                std::string valReg = asmGenerator->getReg(false);
+                std::string valReg = AssemblyGenerator->getReg(false);
                 for(int i = 0; i < len; i++) {
                     IRLocalVar  *castDst = reinterpret_cast<IRLocalVar*>(dst);
-                    IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
-                    asmGenerator->asmCodeList.push_back(std::string("li ") + valReg + std::string(", ") + castImm->val);
-                    asmGenerator->asmCodeList.push_back(std::string("sw ") + valReg + std::string(", ") + std::to_string(i*4-reinterpret_cast<IRLocalVar*>(dst)->displacement) + std::string("(s0)"));
+                    IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("li ") + valReg + std::string(", ") + castImm->val);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("sw ") + valReg + std::string(", ") + std::to_string(i*4-reinterpret_cast<IRLocalVar*>(dst)->offset) + std::string("(s0)"));
                 }
                 return;
             }
             
-            asmGenerator->asmDataList.push_back(".data");
+            AssemblyGenerator->asmDataList.push_back(".data");
             switch (reinterpret_cast<IRLocalVar*>(dst)->dataType) {
                 case FLOAT:
                     alignSize = 2;
@@ -1468,20 +1468,20 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
             }
             if (len > 1)
                 alignSize = 3;
-            asmGenerator->asmDataList.push_back(std::string(".align ") + std::to_string(alignSize));
-            asmGenerator->asmDataList.push_back(std::string(".type LVar") + std::to_string(reinterpret_cast<IRLocalVar*>(dst)->name) + std::string(", @object"));
-            asmGenerator->asmDataList.push_back(std::string(".size LVar") + std::to_string(reinterpret_cast<IRLocalVar*>(dst)->name) + std::string(", ") + std::to_string(len * dataLen));
-            asmGenerator->asmDataList.push_back(std::string("LVar") + std::to_string(reinterpret_cast<IRLocalVar*>(dst)->name) + std::string(":"));
+            AssemblyGenerator->asmDataList.push_back(std::string(".align ") + std::to_string(alignSize));
+            AssemblyGenerator->asmDataList.push_back(std::string(".type LVar") + std::to_string(reinterpret_cast<IRLocalVar*>(dst)->name) + std::string(", @object"));
+            AssemblyGenerator->asmDataList.push_back(std::string(".size LVar") + std::to_string(reinterpret_cast<IRLocalVar*>(dst)->name) + std::string(", ") + std::to_string(len * dataLen));
+            AssemblyGenerator->asmDataList.push_back(std::string("LVar") + std::to_string(reinterpret_cast<IRLocalVar*>(dst)->name) + std::string(":"));
             
             switch(dataType) {
                 case FLOAT:
                 {
                     for(int i = 0; i < len; i++) {
                         IRLocalVar  *castDst = reinterpret_cast<IRLocalVar*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         float fval = std::stof(castImm->val);
                         int dval = *(int *)&fval;
-                        asmGenerator->asmDataList.push_back(std::string(".word ") + std::to_string(dval));
+                        AssemblyGenerator->asmDataList.push_back(std::string(".word ") + std::to_string(dval));
                     }
                     break;
                 }
@@ -1489,34 +1489,34 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 { 
                     for(int i = 0; i < len; i++) {
                         IRLocalVar  *castDst = reinterpret_cast<IRLocalVar*>(dst);
-                        IRImmediate *castImm = reinterpret_cast<IRImmediate*>(castDst->initVal[i]);
+                        IRImmediateValue *castImm = reinterpret_cast<IRImmediateValue*>(castDst->initVal[i]);
                         double fval = std::stod(castImm->val);
                         long long dval = *(long long *)&fval;
-                        asmGenerator->asmDataList.push_back(std::string(".dword ") + std::to_string(dval));
+                        AssemblyGenerator->asmDataList.push_back(std::string(".dword ") + std::to_string(dval));
                     }
                     break;
                 }
             }
             
-            std::string addrReg = asmGenerator->getReg(false);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = addrReg;
-            std::string valReg  = asmGenerator->getReg(false);
-            asmGenerator->regConfig = false;
-            asmGenerator->asmCodeList.push_back(std::string("la ") + addrReg + ", LVar" + std::to_string(reinterpret_cast<IRLocalVar*>(dst)->name)); 
+            std::string addrReg = AssemblyGenerator->getReg(false);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = addrReg;
+            std::string valReg  = AssemblyGenerator->getReg(false);
+            AssemblyGenerator->regConfig = false;
+            AssemblyGenerator->asmCodeList.push_back(std::string("la ") + addrReg + ", LVar" + std::to_string(reinterpret_cast<IRLocalVar*>(dst)->name)); 
             int totalByte = len * dataLen;
             int doneByte  = 0;
             int leftByte;
             while (doneByte < totalByte) {
                 leftByte = totalByte - doneByte;
                 if (leftByte >= 8) {
-                    asmGenerator->asmCodeList.push_back(std::string("ld ") + valReg + std::string(", ") + std::to_string(doneByte) + std::string("(") + addrReg + std::string(")"));
-                    asmGenerator->asmCodeList.push_back(std::string("sd ") + valReg + std::string(", ") + std::to_string(doneByte-reinterpret_cast<IRLocalVar*>(dst)->displacement) + std::string("(s0)"));
+                    AssemblyGenerator->asmCodeList.push_back(std::string("ld ") + valReg + std::string(", ") + std::to_string(doneByte) + std::string("(") + addrReg + std::string(")"));
+                    AssemblyGenerator->asmCodeList.push_back(std::string("sd ") + valReg + std::string(", ") + std::to_string(doneByte-reinterpret_cast<IRLocalVar*>(dst)->offset) + std::string("(s0)"));
                     doneByte += 8;
                 }
                 else if (leftByte == 4) {
-                    asmGenerator->asmCodeList.push_back(std::string("lw ") + valReg + std::string(", ") + std::to_string(doneByte) + std::string("(") + addrReg + std::string(")"));
-                    asmGenerator->asmCodeList.push_back(std::string("sw ") + valReg + std::string(", ") + std::to_string(doneByte-reinterpret_cast<IRLocalVar*>(dst)->displacement) + std::string("(s0)"));
+                    AssemblyGenerator->asmCodeList.push_back(std::string("lw ") + valReg + std::string(", ") + std::to_string(doneByte) + std::string("(") + addrReg + std::string(")"));
+                    AssemblyGenerator->asmCodeList.push_back(std::string("sw ") + valReg + std::string(", ") + std::to_string(doneByte-reinterpret_cast<IRLocalVar*>(dst)->offset) + std::string("(s0)"));
                     doneByte += 4;
                 }
             }
@@ -1524,94 +1524,94 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
         }
         case IR_FUNC_START:
         {
-            asmGenerator->asmCodeList.push_back(".text");
-            asmGenerator->asmCodeList.push_back(".align 2");
-            asmGenerator->asmCodeList.push_back(".global " + reinterpret_cast<IRFunc*>(dst)->funcSymbol->getSymbolName());
-            asmGenerator->asmCodeList.push_back(".type " + reinterpret_cast<IRFunc*>(dst)->funcSymbol->getSymbolName() + ", @function");
-            asmGenerator->asmCodeList.push_back(reinterpret_cast<IRFunc*>(dst)->funcSymbol->getSymbolName() + ":");
-            asmGenerator->stackSize = reinterpret_cast<IRFunc*>(dst)->stackSize;
-            asmGenerator->asmCodeList.push_back(std::string("addi sp, sp, ") + std::to_string(-asmGenerator->stackSize));
-            asmGenerator->asmCodeList.push_back(std::string("sd s0, ") + std::to_string(asmGenerator->stackSize-8) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("sd ra, ") + std::to_string(asmGenerator->stackSize-16) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("sd s1, ") + std::to_string(asmGenerator->stackSize-24) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("sd s2, ") + std::to_string(asmGenerator->stackSize-32) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("sd s3, ") + std::to_string(asmGenerator->stackSize-40) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("sd s4, ") + std::to_string(asmGenerator->stackSize-48) + std::string("(sp)"));
-            if (asmGenerator->opt == 0){
+            AssemblyGenerator->asmCodeList.push_back(".text");
+            AssemblyGenerator->asmCodeList.push_back(".align 2");
+            AssemblyGenerator->asmCodeList.push_back(".global " + reinterpret_cast<IRFunc*>(dst)->funcSymbol->getSymbolName());
+            AssemblyGenerator->asmCodeList.push_back(".type " + reinterpret_cast<IRFunc*>(dst)->funcSymbol->getSymbolName() + ", @function");
+            AssemblyGenerator->asmCodeList.push_back(reinterpret_cast<IRFunc*>(dst)->funcSymbol->getSymbolName() + ":");
+            AssemblyGenerator->stackSize = reinterpret_cast<IRFunc*>(dst)->stackSize;
+            AssemblyGenerator->asmCodeList.push_back(std::string("addi sp, sp, ") + std::to_string(-AssemblyGenerator->stackSize));
+            AssemblyGenerator->asmCodeList.push_back(std::string("sd s0, ") + std::to_string(AssemblyGenerator->stackSize-8) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("sd ra, ") + std::to_string(AssemblyGenerator->stackSize-16) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("sd s1, ") + std::to_string(AssemblyGenerator->stackSize-24) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("sd s2, ") + std::to_string(AssemblyGenerator->stackSize-32) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("sd s3, ") + std::to_string(AssemblyGenerator->stackSize-40) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("sd s4, ") + std::to_string(AssemblyGenerator->stackSize-48) + std::string("(sp)"));
+            if (AssemblyGenerator->opt == 0){
                 for (int i = 5; i < 12; i++)
-                    asmGenerator->asmCodeList.push_back(std::string("sd s") + std::to_string(i) + std::string(", ") + std::to_string(asmGenerator->stackSize-16-8*i) + std::string("(sp)"));
+                    AssemblyGenerator->asmCodeList.push_back(std::string("sd s") + std::to_string(i) + std::string(", ") + std::to_string(AssemblyGenerator->stackSize-16-8*i) + std::string("(sp)"));
             }
-            asmGenerator->asmCodeList.push_back(std::string("addi s0, ") + std::string("sp, ") + std::to_string(asmGenerator->stackSize));
-            asmGenerator->paramNum = 0;
+            AssemblyGenerator->asmCodeList.push_back(std::string("addi s0, ") + std::string("sp, ") + std::to_string(AssemblyGenerator->stackSize));
+            AssemblyGenerator->paramCount = 0;
             std::string paramReg;
-            asmGenerator->addrDescriptorMap.clear();
+            AssemblyGenerator->addrDescriptorMap.clear();
             for (auto param : reinterpret_cast<IRFunc*>(dst)->funcSymbol->getParams()) {
-                AddrDescriptor *newAddrDes = asmGenerator->searchAddrDescriptorMap(param->getIROperand());
+                AddrDescriptor *newAddrDes = AssemblyGenerator->searchAddrDescriptorMap(param->getIROperand());
                 newAddrDes->isArg = true;
                 if (reinterpret_cast<IRVar*>(param)->dataType == FLOAT || reinterpret_cast<IRVar*>(param)->dataType == DOUBLE) {
-                    paramReg = "fa"+std::to_string(asmGenerator->paramNum);
+                    paramReg = "fa"+std::to_string(AssemblyGenerator->paramCount);
                 }
                 else {
-                    paramReg = "a"+std::to_string(asmGenerator->paramNum);
+                    paramReg = "a"+std::to_string(AssemblyGenerator->paramCount);
                 }
                 newAddrDes->atReg.push_back(paramReg);
-                asmGenerator->paramList.push_back(param->getIROperand());
-                asmGenerator->paramNum++;
+                AssemblyGenerator->paramList.push_back(param->getIROperand());
+                AssemblyGenerator->paramCount++;
             }
             break;
         } 
         case IR_FUNC_END:
         {
-            asmGenerator->paramList.clear();
-            asmGenerator->addrDescriptorMap.clear();
-            asmGenerator->asmCodeList.push_back(std::string("ld s0, ") + std::to_string(asmGenerator->stackSize-8) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("ld ra, ") + std::to_string(asmGenerator->stackSize-16) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("ld s1, ") + std::to_string(asmGenerator->stackSize-24) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("ld s2, ") + std::to_string(asmGenerator->stackSize-32) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("ld s3, ") + std::to_string(asmGenerator->stackSize-40) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("ld s4, ") + std::to_string(asmGenerator->stackSize-48) + std::string("(sp)"));
-            if (asmGenerator->opt == 0){
+            AssemblyGenerator->paramList.clear();
+            AssemblyGenerator->addrDescriptorMap.clear();
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld s0, ") + std::to_string(AssemblyGenerator->stackSize-8) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld ra, ") + std::to_string(AssemblyGenerator->stackSize-16) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld s1, ") + std::to_string(AssemblyGenerator->stackSize-24) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld s2, ") + std::to_string(AssemblyGenerator->stackSize-32) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld s3, ") + std::to_string(AssemblyGenerator->stackSize-40) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld s4, ") + std::to_string(AssemblyGenerator->stackSize-48) + std::string("(sp)"));
+            if (AssemblyGenerator->opt == 0){
                 for (int i = 5; i < 12; i++)
-                    asmGenerator->asmCodeList.push_back(std::string("ld s") + std::to_string(i) + std::string(", ") + std::to_string(asmGenerator->stackSize-16-8*i) + std::string("(sp)"));
+                    AssemblyGenerator->asmCodeList.push_back(std::string("ld s") + std::to_string(i) + std::string(", ") + std::to_string(AssemblyGenerator->stackSize-16-8*i) + std::string("(sp)"));
             }
-            asmGenerator->asmCodeList.push_back(std::string("addi sp, sp, ") + std::to_string(asmGenerator->stackSize));
-            asmGenerator->asmCodeList.push_back("ret");   
+            AssemblyGenerator->asmCodeList.push_back(std::string("addi sp, sp, ") + std::to_string(AssemblyGenerator->stackSize));
+            AssemblyGenerator->asmCodeList.push_back("ret");   
             break;  
         }
         case IR_PARAM:
         {
-            if (asmGenerator->calleeParamNum < asmGenerator->paramNum) {
-                IROperand *saveOperand = asmGenerator->paramList[asmGenerator->calleeParamNum];
-                saveOperand->toMem(asmGenerator, nullptr, asmGenerator->addrDescriptorMap[saveOperand]->atReg[0]);
+            if (AssemblyGenerator->calleeParamNum < AssemblyGenerator->paramCount) {
+                IROperand *saveOperand = AssemblyGenerator->paramList[AssemblyGenerator->calleeParamNum];
+                saveOperand->toMem(AssemblyGenerator, nullptr, AssemblyGenerator->addrDescriptorMap[saveOperand]->atReg[0]);
             }
-            std::string srcReg = dst->toReg(asmGenerator, dstInfo);
-            dst->toArgReg(asmGenerator, asmGenerator->calleeParamNum, srcReg);
-            asmGenerator->calleeParamNum++;
+            std::string srcReg = dst->toRegister(AssemblyGenerator, dstInfo);
+            dst->argReg(AssemblyGenerator, AssemblyGenerator->calleeParamNum, srcReg);
+            AssemblyGenerator->calleeParamNum++;
             break;
         }
         case IR_CALL:
         {
-            std::string newAsm = "call " + reinterpret_cast<IRFunc*>(dst)->funcSymbol->getSymbolName();
-            asmGenerator->asmCodeList.push_back(newAsm);
+            std::string newAssembly = "call " + reinterpret_cast<IRFunc*>(dst)->funcSymbol->getSymbolName();
+            AssemblyGenerator->asmCodeList.push_back(newAssembly);
             int i = 0;
             if (src1 != nullptr) {
                 i = 1;
             }
-            int minParamNum = (asmGenerator->calleeParamNum > asmGenerator->paramNum) ? asmGenerator->paramNum : asmGenerator->calleeParamNum;
+            int minParamNum = (AssemblyGenerator->calleeParamNum > AssemblyGenerator->paramCount) ? AssemblyGenerator->paramCount : AssemblyGenerator->calleeParamNum;
             for (; i < minParamNum; i++) {
-                asmGenerator->paramList[i]->toAssignReg(asmGenerator, i);
+                AssemblyGenerator->paramList[i]->assignReg(AssemblyGenerator, i);
             }
-            asmGenerator->calleeParamNum = 0;
+            AssemblyGenerator->calleeParamNum = 0;
             break;
         }
         case IR_ADD:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string srcReg2 = src2->toReg(asmGenerator, src2Info);
-            asmGenerator->regConfig = false;
-            std::string dstReg  = dst->toReg(asmGenerator, dstInfo);
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string srcReg2 = src2->toRegister(AssemblyGenerator, src2Info);
+            AssemblyGenerator->regConfig = false;
+            std::string dstReg  = dst->toRegister(AssemblyGenerator, dstInfo);
             switch(dataType) {
                 case Type::INT: 
                     asmOpCode = "add ";
@@ -1625,17 +1625,17 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 default:
                     break;
             }
-            asmGenerator->asmCodeList.push_back(asmOpCode + dstReg + ", " + srcReg1 + ", " + srcReg2);
+            AssemblyGenerator->asmCodeList.push_back(asmOpCode + dstReg + ", " + srcReg1 + ", " + srcReg2);
             break;
         }
         case IR_SUB:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string srcReg2 = src2->toReg(asmGenerator, src2Info);
-            asmGenerator->regConfig = false;
-            std::string dstReg  = dst->toReg(asmGenerator, dstInfo);
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string srcReg2 = src2->toRegister(AssemblyGenerator, src2Info);
+            AssemblyGenerator->regConfig = false;
+            std::string dstReg  = dst->toRegister(AssemblyGenerator, dstInfo);
             switch(dataType) {
                 case Type::INT: 
                     asmOpCode = "sub ";
@@ -1649,17 +1649,17 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 default:
                     break;
             }
-            asmGenerator->asmCodeList.push_back(asmOpCode + dstReg + ", " + srcReg1 + ", " + srcReg2);
+            AssemblyGenerator->asmCodeList.push_back(asmOpCode + dstReg + ", " + srcReg1 + ", " + srcReg2);
             break;
         }
         case IR_MUL:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string srcReg2 = src2->toReg(asmGenerator, src2Info);
-            asmGenerator->regConfig = false;
-            std::string dstReg  = dst->toReg(asmGenerator, dstInfo);
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string srcReg2 = src2->toRegister(AssemblyGenerator, src2Info);
+            AssemblyGenerator->regConfig = false;
+            std::string dstReg  = dst->toRegister(AssemblyGenerator, dstInfo);
             switch(dataType) {
                 case Type::INT: 
                     asmOpCode = "mul ";
@@ -1673,17 +1673,17 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 default:
                     break;
             }
-            asmGenerator->asmCodeList.push_back(asmOpCode + dstReg + ", " + srcReg1 + ", " + srcReg2);
+            AssemblyGenerator->asmCodeList.push_back(asmOpCode + dstReg + ", " + srcReg1 + ", " + srcReg2);
             break;
         }
         case IR_DIV:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string srcReg2 = src2->toReg(asmGenerator, src2Info);
-            asmGenerator->regConfig = false;
-            std::string dstReg  = dst->toReg(asmGenerator, dstInfo);
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string srcReg2 = src2->toRegister(AssemblyGenerator, src2Info);
+            AssemblyGenerator->regConfig = false;
+            std::string dstReg  = dst->toRegister(AssemblyGenerator, dstInfo);
             switch(dataType) {
                 case Type::INT: 
                     asmOpCode = "div ";
@@ -1697,74 +1697,74 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 default:
                     break;
             }
-            asmGenerator->asmCodeList.push_back(asmOpCode + dstReg + ", " + srcReg1 + ", " + srcReg2);
+            AssemblyGenerator->asmCodeList.push_back(asmOpCode + dstReg + ", " + srcReg1 + ", " + srcReg2);
             break;
         }
         case IR_MOD:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string srcReg2 = src2->toReg(asmGenerator, src2Info);
-            asmGenerator->regConfig = false;
-            std::string dstReg  = dst->toReg(asmGenerator, dstInfo);
-            asmGenerator->asmCodeList.push_back(std::string("rem ") + dstReg + ", " + srcReg1 + ", " + srcReg2);
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string srcReg2 = src2->toRegister(AssemblyGenerator, src2Info);
+            AssemblyGenerator->regConfig = false;
+            std::string dstReg  = dst->toRegister(AssemblyGenerator, dstInfo);
+            AssemblyGenerator->asmCodeList.push_back(std::string("rem ") + dstReg + ", " + srcReg1 + ", " + srcReg2);
             break;
         }
         case IR_ASSIGN:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
             if (dynamic_cast<IRArrayElem*>(dst) != nullptr) {
-                dst->toMem(asmGenerator, dstInfo, srcReg1);       
+                dst->toMem(AssemblyGenerator, dstInfo, srcReg1);       
             }
-            else if (std::count(asmGenerator->paramList.begin(), asmGenerator->paramList.end(), dst) != 0) {
-                std::string dstReg = asmGenerator->searchAddrDescriptorMap(dst)->atReg[0];
-                asmGenerator->asmCodeList.push_back(std::string("mv ") + dstReg + std::string(", ") + srcReg1);
+            else if (std::count(AssemblyGenerator->paramList.begin(), AssemblyGenerator->paramList.end(), dst) != 0) {
+                std::string dstReg = AssemblyGenerator->searchAddrDescriptorMap(dst)->atReg[0];
+                AssemblyGenerator->asmCodeList.push_back(std::string("mv ") + dstReg + std::string(", ") + srcReg1);
             }
-            else if (std::count(asmGenerator->paramList.begin(), asmGenerator->paramList.end(), src1) != 0) {
-                std::string reg = asmGenerator->getReg(false);
-                asmGenerator->asmCodeList.push_back(std::string("mv ") + reg + std::string(", ") + srcReg1);
-                AddrDescriptor *addrDes = asmGenerator->searchAddrDescriptorMap(dst);
+            else if (std::count(AssemblyGenerator->paramList.begin(), AssemblyGenerator->paramList.end(), src1) != 0) {
+                std::string reg = AssemblyGenerator->getReg(false);
+                AssemblyGenerator->asmCodeList.push_back(std::string("mv ") + reg + std::string(", ") + srcReg1);
+                AddrDescriptor *addrDes = AssemblyGenerator->searchAddrDescriptorMap(dst);
                 addrDes->atReg.push_back(reg);
-                asmGenerator->regDescriptorMap[reg]->operandList.insert(dst);
+                AssemblyGenerator->regDescriptorMap[reg]->ops.insert(dst);
             }
-            else if (dstInfo->liveness && dstInfo->usedInfo != nullptr && dynamic_cast<IRTemp*>(dst) == nullptr) {
-                dst->toMem(asmGenerator, nullptr, srcReg1);
-                AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(dst);
+            else if (dstInfo->liveness && dstInfo->usedInfo != nullptr && dynamic_cast<TemporaryValue*>(dst) == nullptr) {
+                dst->toMem(AssemblyGenerator, nullptr, srcReg1);
+                AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(dst);
                 if (addrDescriptor->atReg.size() > 0) {
-                    asmGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->operandList.erase(dst);
+                    AssemblyGenerator->regDescriptorMap[addrDescriptor->atReg[0]]->ops.erase(dst);
                     addrDescriptor->atReg[0] = srcReg1;
                 }
                 else
                     addrDescriptor->atReg.push_back(srcReg1);
-                asmGenerator->regDescriptorMap[srcReg1]->operandList.insert(dst);
-                addrDescriptor->atMemory = false;
+                AssemblyGenerator->regDescriptorMap[srcReg1]->ops.insert(dst);
+                addrDescriptor->inMem = false;
             }
             else if (dstInfo->liveness && dstInfo->usedInfo == nullptr) {
-                dst->toMem(asmGenerator, nullptr, srcReg1);
-                //AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(dst);
-                //addrDescriptor->atMemory = true;
+                dst->toMem(AssemblyGenerator, nullptr, srcReg1);
+                //AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(dst);
+                //addrDescriptor->inMem = true;
             }
             else {
-                AddrDescriptor *addrDescriptor = asmGenerator->searchAddrDescriptorMap(dst);
+                AddrDescriptor *addrDescriptor = AssemblyGenerator->searchAddrDescriptorMap(dst);
                 //addrDescriptor->atReg.push_back(srcReg1);
                 if (addrDescriptor->atReg.size() > 0)
                     addrDescriptor->atReg[0] = srcReg1;
                 else 
                     addrDescriptor->atReg.push_back(srcReg1);
-                asmGenerator->regDescriptorMap[srcReg1]->operandList.insert(dst);
-                addrDescriptor->atMemory = false;
+                AssemblyGenerator->regDescriptorMap[srcReg1]->ops.insert(dst);
+                addrDescriptor->inMem = false;
             }
             break;
         }
         case IR_NEG:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string dstReg  = dst->toReg(asmGenerator, dstInfo);
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string dstReg  = dst->toRegister(AssemblyGenerator, dstInfo);
             switch(dataType) {
                 case Type::INT: 
                     asmOpCode = "neg ";
@@ -1778,30 +1778,30 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                 default:
                     break;
             }
-            asmGenerator->asmCodeList.push_back(asmOpCode + dstReg + ", " + srcReg1);
+            AssemblyGenerator->asmCodeList.push_back(asmOpCode + dstReg + ", " + srcReg1);
             break;
         }
         case IR_BLT:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string srcReg2 = src2->toReg(asmGenerator, src2Info);
-            asmGenerator->regConfig = false;
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string srcReg2 = src2->toRegister(AssemblyGenerator, src2Info);
+            AssemblyGenerator->regConfig = false;
             switch(dataType) {
                 case Type::INT: 
                     asmOpCode = "blt ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + srcReg1 + std::string(", ") + srcReg2 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + srcReg1 + std::string(", ") + srcReg2 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::FLOAT: 
                     asmOpCode = "flt.s ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
-                    asmGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::DOUBLE: 
                     asmOpCode = "flt.d ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
-                    asmGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 default:
                     break;
@@ -1810,25 +1810,25 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
         }
         case IR_BLE:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string srcReg2 = src2->toReg(asmGenerator, src2Info);
-            asmGenerator->regConfig = false;
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string srcReg2 = src2->toRegister(AssemblyGenerator, src2Info);
+            AssemblyGenerator->regConfig = false;
             switch(dataType) {
                 case Type::INT: 
                     asmOpCode = "bge ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + srcReg2 + std::string(", ") + srcReg1 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + srcReg2 + std::string(", ") + srcReg1 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::FLOAT: 
                     asmOpCode = "fle.s ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
-                    asmGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::DOUBLE: 
                     asmOpCode = "fle.d ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
-                    asmGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 default:
                     break;
@@ -1837,25 +1837,25 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
         }
         case IR_BGT:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string srcReg2 = src2->toReg(asmGenerator, src2Info);
-            asmGenerator->regConfig = false;
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string srcReg2 = src2->toRegister(AssemblyGenerator, src2Info);
+            AssemblyGenerator->regConfig = false;
             switch(dataType) {
                 case Type::INT: 
                     asmOpCode = "blt ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + srcReg2 + std::string(", ") + srcReg1 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + srcReg2 + std::string(", ") + srcReg1 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::FLOAT: 
                     asmOpCode = "flt.s ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg2 + std::string(", ") + srcReg1);
-                    asmGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg2 + std::string(", ") + srcReg1);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::DOUBLE: 
                     asmOpCode = "fle.d ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
-                    asmGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 default:
                     break;
@@ -1864,25 +1864,25 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
         }
         case IR_BGE:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string srcReg2 = src2->toReg(asmGenerator, src2Info);
-            asmGenerator->regConfig = false;
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string srcReg2 = src2->toRegister(AssemblyGenerator, src2Info);
+            AssemblyGenerator->regConfig = false;
             switch(dataType) {
                 case Type::INT: 
                     asmOpCode = "bge ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + srcReg1 + std::string(", ") + srcReg2 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + srcReg1 + std::string(", ") + srcReg2 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::FLOAT: 
                     asmOpCode = "fle.s ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg2 + std::string(", ") + srcReg1);
-                    asmGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg2 + std::string(", ") + srcReg1);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::DOUBLE: 
                     asmOpCode = "fle.d ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg2 + std::string(", ") + srcReg1);
-                    asmGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg2 + std::string(", ") + srcReg1);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 default:
                     break;
@@ -1891,26 +1891,26 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
         }
         case IR_BEQ:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string srcReg2 = src2->toReg(asmGenerator, src2Info);
-            asmGenerator->regConfig = false;
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string srcReg2 = src2->toRegister(AssemblyGenerator, src2Info);
+            AssemblyGenerator->regConfig = false;
             std::string tmp;
             switch(dataType) {
                 case Type::INT: 
                     asmOpCode = "beq ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + srcReg1 + std::string(", ") + srcReg2 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + srcReg1 + std::string(", ") + srcReg2 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::FLOAT: 
                     asmOpCode = "feq.s ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
-                    asmGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::DOUBLE: 
                     asmOpCode = "feq.d ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
-                    asmGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("bnez ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 default:
                     break;
@@ -1919,28 +1919,28 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
         }
         case IR_BNE:
         {
-            std::string srcReg1 = src1->toReg(asmGenerator, src1Info);
-            asmGenerator->regConfig = true;
-            asmGenerator->configReg = srcReg1;
-            std::string srcReg2 = src2->toReg(asmGenerator, src2Info);
-            asmGenerator->regConfig = false;
+            std::string srcReg1 = src1->toRegister(AssemblyGenerator, src1Info);
+            AssemblyGenerator->regConfig = true;
+            AssemblyGenerator->configReg = srcReg1;
+            std::string srcReg2 = src2->toRegister(AssemblyGenerator, src2Info);
+            AssemblyGenerator->regConfig = false;
             std::string tmp;
             switch(dataType) {
                 case Type::INT: 
                     asmOpCode = "bne ";
-                    asmGenerator->asmCodeList.push_back(asmOpCode + srcReg1 + std::string(", ") + srcReg2 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + srcReg1 + std::string(", ") + srcReg2 + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::FLOAT: 
                     asmOpCode = "feq.s ";
-                    tmp = asmGenerator->getReg(true);
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
-                    asmGenerator->asmCodeList.push_back(std::string("beqz ") + tmp + ", L" + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    tmp = AssemblyGenerator->getReg(true);
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("beqz ") + tmp + ", L" + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 case Type::DOUBLE: 
                     asmOpCode = "feq.d ";
-                    tmp = asmGenerator->getReg(true);
-                    asmGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
-                    asmGenerator->asmCodeList.push_back(std::string("beqz ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+                    tmp = AssemblyGenerator->getReg(true);
+                    AssemblyGenerator->asmCodeList.push_back(asmOpCode + tmp + std::string(", ") + srcReg1 + std::string(", ") + srcReg2);
+                    AssemblyGenerator->asmCodeList.push_back(std::string("beqz ") + tmp + std::string(", L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
                     break;
                 default:
                     break;
@@ -1949,13 +1949,13 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
         }
         case IR_LABEL:
         {
-            asmGenerator->asmCodeList.push_back(std::string("L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name) + std::string(":"));   
+            AssemblyGenerator->asmCodeList.push_back(std::string("L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name) + std::string(":"));   
             break;
         }
         case IR_RETURN:
         {
             if (dst != nullptr) {
-                std::string reg = dst->toReg(asmGenerator, dstInfo);
+                std::string reg = dst->toRegister(AssemblyGenerator, dstInfo);
                 std::string asmOpcode;
                 std::string returnReg;
                 if (dataType == INT) {
@@ -1970,25 +1970,25 @@ void IRCode::genAsmCode(AsmGenerator *asmGenerator) {
                     asmOpcode = "fmv.d ";
                     returnReg = "fa0";
                 }
-                asmGenerator->asmCodeList.push_back(asmOpcode + returnReg + ", " + reg);
+                AssemblyGenerator->asmCodeList.push_back(asmOpcode + returnReg + ", " + reg);
             }
-            asmGenerator->asmCodeList.push_back(std::string("ld s0, ") + std::to_string(asmGenerator->stackSize-8) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("ld ra, ") + std::to_string(asmGenerator->stackSize-16) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("ld s1, ") + std::to_string(asmGenerator->stackSize-24) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("ld s2, ") + std::to_string(asmGenerator->stackSize-32) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("ld s3, ") + std::to_string(asmGenerator->stackSize-40) + std::string("(sp)"));
-            asmGenerator->asmCodeList.push_back(std::string("ld s4, ") + std::to_string(asmGenerator->stackSize-48) + std::string("(sp)"));
-            if (asmGenerator->opt == 0){
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld s0, ") + std::to_string(AssemblyGenerator->stackSize-8) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld ra, ") + std::to_string(AssemblyGenerator->stackSize-16) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld s1, ") + std::to_string(AssemblyGenerator->stackSize-24) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld s2, ") + std::to_string(AssemblyGenerator->stackSize-32) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld s3, ") + std::to_string(AssemblyGenerator->stackSize-40) + std::string("(sp)"));
+            AssemblyGenerator->asmCodeList.push_back(std::string("ld s4, ") + std::to_string(AssemblyGenerator->stackSize-48) + std::string("(sp)"));
+            if (AssemblyGenerator->opt == 0){
                 for (int i = 5; i < 12; i++)
-                    asmGenerator->asmCodeList.push_back(std::string("ld s") + std::to_string(i) + std::string(", ") + std::to_string(asmGenerator->stackSize-16-8*i) + std::string("(sp)"));
+                    AssemblyGenerator->asmCodeList.push_back(std::string("ld s") + std::to_string(i) + std::string(", ") + std::to_string(AssemblyGenerator->stackSize-16-8*i) + std::string("(sp)"));
             }
-            asmGenerator->asmCodeList.push_back(std::string("addi sp, sp, ") + std::to_string(asmGenerator->stackSize));
-            asmGenerator->asmCodeList.push_back("ret");   
+            AssemblyGenerator->asmCodeList.push_back(std::string("addi sp, sp, ") + std::to_string(AssemblyGenerator->stackSize));
+            AssemblyGenerator->asmCodeList.push_back("ret");   
             break;
         }
         case IR_GOTO:
         {
-            asmGenerator->asmCodeList.push_back(std::string("j L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
+            AssemblyGenerator->asmCodeList.push_back(std::string("j L") + std::to_string(reinterpret_cast<IRLabel*>(dst)->name));
             break;
         }
     }

@@ -47,7 +47,7 @@ class Block {
     
     public:
     Block(Block *pre) : pre(pre) {}
-    ValSymbol *addValSymbol(Type dataType, std::string &symbolName, int dimSize, std::vector<int> &dimArray, bool isConst);
+    ValSymbol *addVariable(Type dataType, std::string &symbolName, int dimSize, std::vector<int> &dimArray, bool isConst);
     ValSymbol *searchValSymbol(std::string &symbolName);
     Block *getPre() {return pre;}
 };

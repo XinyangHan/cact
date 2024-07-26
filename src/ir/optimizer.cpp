@@ -3,7 +3,7 @@
 #include <cassert>
 #include "include/ir/generator.h"
 
-void IROptimizer::basicBlockPartition(std::vector<IRCode*> &irCodeList) {
+void IROptimizer::partitionBlocks(std::vector<IntermediateCode*> &irCodeList) {
     int basicBlockSeq = -1;
     bool blockEnd = false;
     //basicBlockList.push_back(new BasicBlock());
@@ -61,7 +61,7 @@ void IROptimizer::basicBlockPartition(std::vector<IRCode*> &irCodeList) {
 
     for (int i = 0; i < basicBlockList.size(); i++){
         auto block = basicBlockList[i];
-        IRCode *lastIR = block->partitionedIR[block->partitionedIR.size()-1];
+        IntermediateCode *lastIR = block->partitionedIR[block->partitionedIR.size()-1];
         switch (lastIR->opCode) {
             case IR_GOTO:
                 assert(label2Block[lastIR->dst]->partitionedIR.size()>0);
@@ -86,19 +86,19 @@ void IROptimizer::basicBlockPartition(std::vector<IRCode*> &irCodeList) {
     }
 }
 
-void IROptimizer::commonSubexpssionEliminate() {
+void IROptimizer::eliminateCommonSubexp() {
     for (auto basicBlock : basicBlockList) {
-        basicBlock->commonSubexpssionEliminate();
+        basicBlock->eliminateCommonSubexp();
     }
 }
 
-void IROptimizer::calLiveInfo() {
+void IROptimizer::calculateLiveness() {
     for (auto basicBlock : basicBlockList) {
-        basicBlock->calLiveInfo();
+        basicBlock->calculateLiveness();
     }
 }
 
-void IROptimizer::irRebuild() {
+void IROptimizer::rebuildIR() {
     for (auto basicBlock : basicBlockList) {
         for (auto rebuidIR : basicBlock->rebuildIR) {
             optIrCodeList.push_back(rebuidIR);
@@ -106,35 +106,35 @@ void IROptimizer::irRebuild() {
     }
 }
 
-void BasicBlock::commonSubexpssionEliminate() {
+void BasicBlock::eliminateCommonSubexp() {
     for (auto irCode : partitionedIR) {
-        irCode->generateDag(this);
+        irCode->createDAG(this);
     }
     for (auto dagNode : dagNodeList) {
-        dagNode->initRepresentElem();
+        dagNode->initElem();
     }
 
     for (int i = 0; i < dagNodeList.size(); i++) {
-        IRCode *irCode = dagNodeList[i]->irRebuild(rebuildIR);
+        IntermediateCode *irCode = dagNodeList[i]->rebuildIR(rebuildIR);
         if (irCode != nullptr)
             rebuildIR.push_back(irCode);
     }
 
 }
 
-void BasicBlock::calLiveInfo() {
+void BasicBlock::calculateLiveness() {
     for (int i = rebuildIR.size()-1; i >= 0; i--) {
-        rebuildIR[i]->calLiveInfo(this);
+        rebuildIR[i]->calculateLiveness(this);
     }
 }
 
-DagNode *BasicBlock::searchOperand2DagNode(IROperand *src) {
+DagNode *BasicBlock::findDagNode(IROperand *src) {
     auto it = this->operand2DagNode.find(src);
     if (it == this->operand2DagNode.end()) {
-        DagNode *newDagNode = new DagTerminalNode(reinterpret_cast<IRVar*>(src)->dataType);
+        DagNode *newDagNode = new DagTermNode(reinterpret_cast<IRVar*>(src)->dataType);
         newDagNode->basicBlock = this;
         operand2DagNode[src] = newDagNode;
-        reinterpret_cast<DagTerminalNode*>(newDagNode)->notTemp = src;
+        reinterpret_cast<DagTermNode*>(newDagNode)->notTemp = src;
         newDagNode->relatedSet.insert(src);
         return newDagNode;
     }
@@ -143,32 +143,32 @@ DagNode *BasicBlock::searchOperand2DagNode(IROperand *src) {
     }
 }
 
-LiveInfo *BasicBlock::searchLivenessMap(IROperand* operand) {
-    LiveInfo *newLiveInfo;
+LifetimeInfo *BasicBlock::findLiveInfo(IROperand* operand) {
+    LifetimeInfo *newLifetimeInfo;
     auto it = livenessMap.find(operand);
     if (it == livenessMap.end()) {
-        if (dynamic_cast<IRTemp*>(operand) != nullptr) {
-            newLiveInfo = new LiveInfo(false, nullptr);
-            livenessMap[operand] = newLiveInfo;
+        if (dynamic_cast<TemporaryValue*>(operand) != nullptr) {
+            newLifetimeInfo = new LifetimeInfo(false, nullptr);
+            livenessMap[operand] = newLifetimeInfo;
         }
         else {
-            newLiveInfo = new LiveInfo(true, nullptr);
-            livenessMap[operand] = newLiveInfo;
+            newLifetimeInfo = new LifetimeInfo(true, nullptr);
+            livenessMap[operand] = newLifetimeInfo;
         }
-        return newLiveInfo;
+        return newLifetimeInfo;
     }
     else {
         return it->second;
     }
 }
 
-IROperand *DagTerminalNode::getIROperand() {
+IROperand *DagTermNode::getIROperand() {
     if (dynamic_cast<IRArrayElem*>(notTemp) != nullptr) {
-        DagNode *dagNode = basicBlock->searchOperand2DagNode(reinterpret_cast<IRArrayElem*>(notTemp)->tempPtr);
+        DagNode *dagNode = basicBlock->findDagNode(reinterpret_cast<IRArrayElem*>(notTemp)->tempPtr);
         return new IRArrayElem(reinterpret_cast<IRArrayElem*>(notTemp)->arrayPtr, dagNode->getIROperand());
     }
     else if (dynamic_cast<IRArrayAddr*>(notTemp) != nullptr) {
-        DagNode *dagNode = basicBlock->searchOperand2DagNode(reinterpret_cast<IRArrayAddr*>(notTemp)->tempPtr);
+        DagNode *dagNode = basicBlock->findDagNode(reinterpret_cast<IRArrayAddr*>(notTemp)->tempPtr);
         return new IRArrayAddr(reinterpret_cast<IRArrayAddr*>(notTemp)->arrayPtr, dagNode->getIROperand());
     }
     else {
@@ -179,7 +179,7 @@ IROperand *DagTerminalNode::getIROperand() {
 IROperand *DagInnerNode::getIROperand() {
     if (isArray) {
         auto it = relatedSet.begin();
-        DagNode *dagNode = basicBlock->searchOperand2DagNode(reinterpret_cast<IRArrayElem*>(*it)->tempPtr);
+        DagNode *dagNode = basicBlock->findDagNode(reinterpret_cast<IRArrayElem*>(*it)->tempPtr);
         return new IRArrayElem(reinterpret_cast<IRArrayElem*>(*it)->arrayPtr, dagNode->getIROperand());
     }
     else {
@@ -187,30 +187,30 @@ IROperand *DagInnerNode::getIROperand() {
     }
 }
 
-void DagInnerNode::initRepresentElem() {
+void DagInnerNode::initElem() {
     if (!isArray) {
         if (label != nullptr) {
             representElem = label;
             return ;
         }
-        representElem = new IRTemp(dataType);
+        representElem = new TemporaryValue(dataType);
     }
 }
 
-IRCode *DagInnerNode::irRebuild(std::vector<IRCode*>& rebuildIR) {
+IntermediateCode *DagInnerNode::rebuildIR(std::vector<IntermediateCode*>& rebuildIR) {
     IROperand *src1 = lchild->getIROperand();
     IROperand *src2 = nullptr;
     if (rchild != nullptr) {
         src2 = rchild->getIROperand();
     }
 
-    rebuildIR.push_back(new IRCode(dataType, opCode, getIROperand(), src1, src2));
+    rebuildIR.push_back(new IntermediateCode(dataType, opCode, getIROperand(), src1, src2));
 
     if (!reinterpret_cast<DagInnerNode*>(this)->isArray) {
         auto it = this->relatedSet.begin();
-        if (dynamic_cast<IRTemp*>(*it) == nullptr) {
+        if (dynamic_cast<TemporaryValue*>(*it) == nullptr) {
             for (auto related : this->relatedSet) {
-                rebuildIR.push_back(new IRCode(this->dataType, IR_ASSIGN, related, this->getIROperand(), nullptr));
+                rebuildIR.push_back(new IntermediateCode(this->dataType, IR_ASSIGN, related, this->getIROperand(), nullptr));
             }
         }
     }
@@ -218,30 +218,30 @@ IRCode *DagInnerNode::irRebuild(std::vector<IRCode*>& rebuildIR) {
     return nullptr;
 }
 
-IRCode *DagOtherNode::irRebuild(std::vector<IRCode*>& rebuildIR) {
+IntermediateCode *DagOtherNode::rebuildIR(std::vector<IntermediateCode*>& rebuildIR) {
     if (opCode != IR_PARAM && opCode != IR_RETURN) {
         return irCode;
     }
     else {
         if (irCode->dst != nullptr) {
-            DagNode *dagNode = basicBlock->searchOperand2DagNode(irCode->dst);
-            //rebuildIR.push_back(new IRCode(irCode->dataType, irCode->opCode, dagNode->getIROperand(), nullptr, nullptr));
-            return new IRCode(irCode->dataType, irCode->opCode, dagNode->getIROperand(), nullptr, nullptr);
+            DagNode *dagNode = basicBlock->findDagNode(irCode->dst);
+            //rebuildIR.push_back(new IntermediateCode(irCode->dataType, irCode->opCode, dagNode->getIROperand(), nullptr, nullptr));
+            return new IntermediateCode(irCode->dataType, irCode->opCode, dagNode->getIROperand(), nullptr, nullptr);
         }
         else {
-            //rebuildIR.push_back(new IRCode(irCode->dataType, irCode->opCode, nullptr, nullptr, nullptr));
-            return new IRCode(irCode->dataType, irCode->opCode, nullptr, nullptr, nullptr);
+            //rebuildIR.push_back(new IntermediateCode(irCode->dataType, irCode->opCode, nullptr, nullptr, nullptr));
+            return new IntermediateCode(irCode->dataType, irCode->opCode, nullptr, nullptr, nullptr);
         }
     }
 }
 
-void IROptimizer::printOptIRCode(std::ofstream &irCodeFile) {
+void IROptimizer::printOptIntermediateCode(std::ofstream &irCodeFile) {
     for (auto const & irCode : optIrCodeList) {
         irCode->print(irCodeFile);
     }
 }
 
-void IROptimizer::printBasicBlock() {
+void IROptimizer::printBlocks() {
     std::ofstream debug;
     debug.open("./basicBlock.txt");
     for (auto basicBlock : basicBlockList) {
@@ -253,13 +253,13 @@ void IROptimizer::printBasicBlock() {
     debug.close();
 }
 
-void addReachOut(std::set<IRCode*> &in, std::set<IRCode*> &predOut) {
+void addReachOut(std::set<IntermediateCode*> &in, std::set<IntermediateCode*> &predOut) {
     for (auto irCode : predOut)
         in.insert(irCode);
 }
 
-bool killAndGen(std::set<IRCode*> &in, std::set<IRCode*> &out, std::set<IRCode*> &kill, IRCode *self) {
-    std::set<IRCode*> tmp;
+bool killAndGen(std::set<IntermediateCode*> &in, std::set<IntermediateCode*> &out, std::set<IntermediateCode*> &kill, IntermediateCode *self) {
+    std::set<IntermediateCode*> tmp;
     for (auto irCode : out)
         tmp.insert(irCode);
 
@@ -278,7 +278,7 @@ bool killAndGen(std::set<IRCode*> &in, std::set<IRCode*> &out, std::set<IRCode*>
     return true;
 }
 
-void IROptimizer::constPass(IRGenerator *irGenerator) {
+void IROptimizer::propagateConsts(IntermediateCodeGenerator *irGenerator) {
     for (int i = 0; i < funcBeginSeq.size(); i++) {
         bool flag = false;
 
@@ -365,7 +365,7 @@ void IROptimizer::constPass(IRGenerator *irGenerator) {
             flag1 = false;
             for (int j = funcBeginSeq[i]; j <= funcEndSeq[i]; j++) {
                 for (int k = 0; k < basicBlockList[j]->partitionedIR.size(); k++) {
-                    if (basicBlockList[j]->partitionedIR[k]->opCode == IR_ASSIGN && dynamic_cast<IRImmediate*>(basicBlockList[j]->partitionedIR[k]->src1) != nullptr && dynamic_cast<IRLocalScalar*>(basicBlockList[j]->partitionedIR[k]->dst) != nullptr || basicBlockList[j]->partitionedIR[k]->opCode == IR_L_ALLOC) {
+                    if (basicBlockList[j]->partitionedIR[k]->opCode == IR_ASSIGN && dynamic_cast<IRImmediateValue*>(basicBlockList[j]->partitionedIR[k]->src1) != nullptr && dynamic_cast<IRLocalScalar*>(basicBlockList[j]->partitionedIR[k]->dst) != nullptr || basicBlockList[j]->partitionedIR[k]->opCode == IR_L_ALLOC) {
                         for (auto irCode : basicBlockList[j]->partitionedIR[k]->def1) {
                             if (irCode->src1Use.size() == 1) {
                                 if (basicBlockList[j]->partitionedIR[k]->opCode == IR_ASSIGN)
@@ -374,14 +374,14 @@ void IROptimizer::constPass(IRGenerator *irGenerator) {
                                     irCode->src1 = reinterpret_cast<IRLocalVar*>(basicBlockList[j]->partitionedIR[k]->dst)->initVal[0];
                                 basicBlockList[j]->partitionedIR[k]->def1.erase(irCode);
                                 flag1 = true;
-                                if (dynamic_cast<IRImmediate*>(irCode->src1) != nullptr && dynamic_cast<IRImmediate*>(irCode->src2) != nullptr) {
+                                if (dynamic_cast<IRImmediateValue*>(irCode->src1) != nullptr && dynamic_cast<IRImmediateValue*>(irCode->src2) != nullptr) {
                                     if (irCode->opCode == IR_ADD) {
                                         switch(irCode->dataType) {
                                             case INT:
-                                                int op1 = stoi(reinterpret_cast<IRImmediate*>(irCode->src1)->val);
-                                                int op2 = stoi(reinterpret_cast<IRImmediate*>(irCode->src2)->val);
+                                                int op1 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src1)->val);
+                                                int op2 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src2)->val);
                                                 irCode->opCode = IR_ASSIGN;
-                                                irCode->src1 = irGenerator->addIRImmediate(INT, std::to_string(op1+op2)); 
+                                                irCode->src1 = irGenerator->addIRImmediateValue(INT, std::to_string(op1+op2)); 
                                                 irCode->src2 = nullptr;
                                                 break;
                                         }
@@ -389,10 +389,10 @@ void IROptimizer::constPass(IRGenerator *irGenerator) {
                                     else if (irCode->opCode == IR_SUB) {
                                         switch(irCode->dataType) {
                                             case INT:
-                                                int op1 = stoi(reinterpret_cast<IRImmediate*>(irCode->src1)->val);
-                                                int op2 = stoi(reinterpret_cast<IRImmediate*>(irCode->src2)->val);
+                                                int op1 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src1)->val);
+                                                int op2 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src2)->val);
                                                 irCode->opCode = IR_ASSIGN;
-                                                irCode->src1 = irGenerator->addIRImmediate(INT, std::to_string(op1-op2)); 
+                                                irCode->src1 = irGenerator->addIRImmediateValue(INT, std::to_string(op1-op2)); 
                                                 irCode->src2 = nullptr;
                                                 break;
                                         }
@@ -400,10 +400,10 @@ void IROptimizer::constPass(IRGenerator *irGenerator) {
                                     else if (irCode->opCode == IR_DIV) {
                                         switch(irCode->dataType) {
                                             case INT:
-                                                int op1 = stoi(reinterpret_cast<IRImmediate*>(irCode->src1)->val);
-                                                int op2 = stoi(reinterpret_cast<IRImmediate*>(irCode->src2)->val);
+                                                int op1 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src1)->val);
+                                                int op2 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src2)->val);
                                                 irCode->opCode = IR_ASSIGN;
-                                                irCode->src1 = irGenerator->addIRImmediate(INT, std::to_string(op1/op2)); 
+                                                irCode->src1 = irGenerator->addIRImmediateValue(INT, std::to_string(op1/op2)); 
                                                 irCode->src2 = nullptr;
                                                 break;
                                         }
@@ -411,10 +411,10 @@ void IROptimizer::constPass(IRGenerator *irGenerator) {
                                     else if (irCode->opCode == IR_MOD) {
                                         switch(irCode->dataType) {
                                             case INT:
-                                                int op1 = stoi(reinterpret_cast<IRImmediate*>(irCode->src1)->val);
-                                                int op2 = stoi(reinterpret_cast<IRImmediate*>(irCode->src2)->val);
+                                                int op1 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src1)->val);
+                                                int op2 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src2)->val);
                                                 irCode->opCode = IR_ASSIGN;
-                                                irCode->src1 = irGenerator->addIRImmediate(INT, std::to_string(op1%op2)); 
+                                                irCode->src1 = irGenerator->addIRImmediateValue(INT, std::to_string(op1%op2)); 
                                                 irCode->src2 = nullptr;
                                                 break;
                                         }
@@ -430,14 +430,14 @@ void IROptimizer::constPass(IRGenerator *irGenerator) {
                                     irCode->src2 = reinterpret_cast<IRLocalVar*>(basicBlockList[j]->partitionedIR[k]->dst)->initVal[0];
                                 basicBlockList[j]->partitionedIR[k]->def2.erase(irCode);
                                 flag1 = true;
-                                if (dynamic_cast<IRImmediate*>(irCode->src1) != nullptr && dynamic_cast<IRImmediate*>(irCode->src2) != nullptr) {
+                                if (dynamic_cast<IRImmediateValue*>(irCode->src1) != nullptr && dynamic_cast<IRImmediateValue*>(irCode->src2) != nullptr) {
                                     if (irCode->opCode == IR_ADD) {
                                         switch(irCode->dataType) {
                                             case INT:
-                                                int op1 = stoi(reinterpret_cast<IRImmediate*>(irCode->src1)->val);
-                                                int op2 = stoi(reinterpret_cast<IRImmediate*>(irCode->src2)->val);
+                                                int op1 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src1)->val);
+                                                int op2 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src2)->val);
                                                 irCode->opCode = IR_ASSIGN;
-                                                irCode->src1 = irGenerator->addIRImmediate(INT, std::to_string(op1+op2)); 
+                                                irCode->src1 = irGenerator->addIRImmediateValue(INT, std::to_string(op1+op2)); 
                                                 irCode->src2 = nullptr;
                                                 break;
                                         }
@@ -445,10 +445,10 @@ void IROptimizer::constPass(IRGenerator *irGenerator) {
                                     else if (irCode->opCode == IR_SUB) {
                                         switch(irCode->dataType) {
                                             case INT:
-                                                int op1 = stoi(reinterpret_cast<IRImmediate*>(irCode->src1)->val);
-                                                int op2 = stoi(reinterpret_cast<IRImmediate*>(irCode->src2)->val);
+                                                int op1 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src1)->val);
+                                                int op2 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src2)->val);
                                                 irCode->opCode = IR_ASSIGN;
-                                                irCode->src1 = irGenerator->addIRImmediate(INT, std::to_string(op1-op2)); 
+                                                irCode->src1 = irGenerator->addIRImmediateValue(INT, std::to_string(op1-op2)); 
                                                 irCode->src2 = nullptr;
                                                 break;
                                         }
@@ -456,10 +456,10 @@ void IROptimizer::constPass(IRGenerator *irGenerator) {
                                     else if (irCode->opCode == IR_DIV) {
                                         switch(irCode->dataType) {
                                             case INT:
-                                                int op1 = stoi(reinterpret_cast<IRImmediate*>(irCode->src1)->val);
-                                                int op2 = stoi(reinterpret_cast<IRImmediate*>(irCode->src2)->val);
+                                                int op1 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src1)->val);
+                                                int op2 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src2)->val);
                                                 irCode->opCode = IR_ASSIGN;
-                                                irCode->src1 = irGenerator->addIRImmediate(INT, std::to_string(op1/op2)); 
+                                                irCode->src1 = irGenerator->addIRImmediateValue(INT, std::to_string(op1/op2)); 
                                                 irCode->src2 = nullptr;
                                                 break;
                                         }
@@ -467,10 +467,10 @@ void IROptimizer::constPass(IRGenerator *irGenerator) {
                                     else if (irCode->opCode == IR_MOD) {
                                         switch(irCode->dataType) {
                                             case INT:
-                                                int op1 = stoi(reinterpret_cast<IRImmediate*>(irCode->src1)->val);
-                                                int op2 = stoi(reinterpret_cast<IRImmediate*>(irCode->src2)->val);
+                                                int op1 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src1)->val);
+                                                int op2 = stoi(reinterpret_cast<IRImmediateValue*>(irCode->src2)->val);
                                                 irCode->opCode = IR_ASSIGN;
-                                                irCode->src1 = irGenerator->addIRImmediate(INT, std::to_string(op1%op2)); 
+                                                irCode->src1 = irGenerator->addIRImmediateValue(INT, std::to_string(op1%op2)); 
                                                 irCode->src2 = nullptr;
                                                 break;
                                         }
@@ -492,7 +492,7 @@ void IROptimizer::constPass(IRGenerator *irGenerator) {
     }
 } 
 
-void IROptimizer::jumpPass(std::vector<IRCode*> &irCodeList) {
+void IROptimizer::optimizeJumps(std::vector<IntermediateCode*> &irCodeList) {
     for (auto irCode : irCodeList){
         switch(irCode->opCode){
             case IR_GOTO:

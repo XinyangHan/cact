@@ -34,7 +34,7 @@ namespace {
   template <typename Comparer>
   void insertSemanticContext(const Ref<const SemanticContext> &semanticContext,
                              std::unordered_set<const SemanticContext*, SemanticContextHasher, SemanticContextComparer> &operandSet,
-                             std::vector<Ref<const SemanticContext>> &operandList,
+                             std::vector<Ref<const SemanticContext>> &ops,
                              Ref<const SemanticContext::PrecedencePredicate> &precedencePredicate,
                              Comparer comparer) {
     if (semanticContext != nullptr) {
@@ -45,7 +45,7 @@ namespace {
       } else {
         auto [existing, inserted] = operandSet.insert(semanticContext.get());
         if (inserted) {
-          operandList.push_back(semanticContext);
+          ops.push_back(semanticContext);
         }
       }
     }
@@ -54,7 +54,7 @@ namespace {
   template <typename Comparer>
   void insertSemanticContext(Ref<const SemanticContext> &&semanticContext,
                              std::unordered_set<const SemanticContext*, SemanticContextHasher, SemanticContextComparer> &operandSet,
-                             std::vector<Ref<const SemanticContext>> &operandList,
+                             std::vector<Ref<const SemanticContext>> &ops,
                              Ref<const SemanticContext::PrecedencePredicate> &precedencePredicate,
                              Comparer comparer) {
     if (semanticContext != nullptr) {
@@ -65,7 +65,7 @@ namespace {
       } else {
         auto [existing, inserted] = operandSet.insert(semanticContext.get());
         if (inserted) {
-          operandList.push_back(std::move(semanticContext));
+          ops.push_back(std::move(semanticContext));
         }
       }
     }
