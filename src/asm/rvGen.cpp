@@ -3,7 +3,7 @@
 #include <algorithm>
 
 // 生成汇编代码并输出到文件
-void AssemblyCodeGenerator::executeAssemblyGene(std::ofstream &asmCodeFile, std::vector<BasicBlock*> &basicBlockList) {
+void AssemblyCodeGenerator::executeAssemblyGene(std::ofstream &asmFile, std::vector<BasicBlock*> &basicBlockList) {
     // 计算栈偏移量
     for (auto basicBlock : basicBlockList) {
         for (auto irCode : basicBlock->rebuildIR) {
@@ -52,7 +52,7 @@ void AssemblyCodeGenerator::executeAssemblyGene(std::ofstream &asmCodeFile, std:
         }
     }
 
-    printAssemblycode(asmCodeFile);
+    printAssemblycode(asmFile);
 }
 
 // 初始化寄存器描述符

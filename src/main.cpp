@@ -155,10 +155,10 @@ int main(int argc, const char* argv[]) {
 
     // 输出汇编代码
     if (isNotNull(asmFileName)) {
-        std::ofstream asmCodeFile;
-        asmCodeFile.open(asmFileName);
-        visitor.AssemblyGenerator->executeAssemblyGene(asmCodeFile, basicBlockList);
-        asmCodeFile.close();
+        std::ofstream asmFile;
+        asmFile.open(asmFileName);
+        visitor.AssemblyGenerator->executeAssemblyGene(asmFile, basicBlockList);
+        asmFile.close();
     } 
 
     return 0; 

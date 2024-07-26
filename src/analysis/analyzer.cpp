@@ -6,6 +6,7 @@
 
 using namespace antlr4;
 
+// 处理程序开始节点
 std::any Analyzer::visitBegin(CACTParser::StartContext *ctx) {
     // 添加库函数
     std::string emptyName;  // 空字符串名称
@@ -38,7 +39,7 @@ std::any Analyzer::visitBegin(CACTParser::StartContext *ctx) {
     return std::any();
 }
 
-
+// 处理基本类型节点
 std::any Analyzer::visitBType(CACTParser::BTypeContext *ctx) {
     if (ctx->BOOL() != nullptr) {
         ctx->btype = Type::BOOL;
@@ -55,6 +56,7 @@ std::any Analyzer::visitBType(CACTParser::BTypeContext *ctx) {
     return std::any();
 }
 
+// 处理函数类型节点
 std::any Analyzer::visitFuncType(CACTParser::FuncTypeContext *ctx) {
     if (ctx->BOOL() != nullptr) {
         ctx->functype = Type::BOOL;
@@ -74,6 +76,7 @@ std::any Analyzer::visitFuncType(CACTParser::FuncTypeContext *ctx) {
     return std::any();
 }
 
+// 处理常量声明节点
 std::any Analyzer::visitConstDecl(CACTParser::ConstDeclContext *ctx) {
     ctx->bType()->accept(this);
     for (const auto & constdef : ctx->constDef()) {
@@ -83,6 +86,7 @@ std::any Analyzer::visitConstDecl(CACTParser::ConstDeclContext *ctx) {
     return std::any();
 }
 
+// 处理变量声明节点
 std::any Analyzer::visitVarDecl(CACTParser::VarDeclContext *ctx) {
     ctx->bType()->accept(this);
     for (const auto & vardef : ctx->varDef()) {
@@ -92,6 +96,7 @@ std::any Analyzer::visitVarDecl(CACTParser::VarDeclContext *ctx) {
     return std::any();
 }
 
+// 处理常量定义节点
 std::any Analyzer::visitConstDef(CACTParser::ConstDefContext *ctx) {
     ctx->symbolname = ctx->IDENT()->getText();
     ctx->dimsize = ctx->LBRACKET().size();
@@ -148,6 +153,7 @@ std::any Analyzer::visitConstDef(CACTParser::ConstDefContext *ctx) {
     return std::any();
 }
 
+// 处理变量定义节点
 std::any Analyzer::visitVarDef(CACTParser::VarDefContext *ctx) {
     bool zero = false;
     ctx->symbolname = ctx->IDENT()->getText();
@@ -227,6 +233,7 @@ std::any Analyzer::visitVarDef(CACTParser::VarDefContext *ctx) {
     return std::any();
 }
 
+// 处理基本常量初始化值节点
 std::any Analyzer::visitConstInitValBasic(CACTParser::ConstInitValBasicContext *ctx) {
     ctx->constExp()->accept(this);
     if (ctx->constExp()->datatype != ctx->datatype) {
@@ -239,6 +246,7 @@ std::any Analyzer::visitConstInitValBasic(CACTParser::ConstInitValBasicContext *
     return std::any();
 }
 
+// 处理嵌套常量初始化值节点
 std::any Analyzer::visitConstInitValNested(CACTParser::ConstInitValNestedContext *ctx) {
     if (ctx->dimsize == 0) {
         //error occurs
@@ -306,6 +314,7 @@ std::any Analyzer::visitConstInitValNested(CACTParser::ConstInitValNestedContext
     return std::any();
 }
 
+// 处理常量表达式节点
 std::any Analyzer::visitConstExp(CACTParser::ConstExpContext *ctx) {
     if (ctx->BOOLCONST() != nullptr) {
         ctx->datatype = Type::BOOL;
@@ -321,6 +330,7 @@ std::any Analyzer::visitConstExp(CACTParser::ConstExpContext *ctx) {
     return std::any();
 }
 
+// 处理初始化数字节点
 std::any Analyzer::visitInitNum(CACTParser::InitNumContext *ctx) {
     if (ctx->SUB() != nullptr) {
         ctx->value = "-";
@@ -331,6 +341,7 @@ std::any Analyzer::visitInitNum(CACTParser::InitNumContext *ctx) {
     return std::any();
 }
 
+// 处理函数定义节点
 std::any Analyzer::visitFuncDef(CACTParser::FuncDefContext *ctx) {
     ctx->funcType()->accept(this);
     ctx->symbolname = ctx->IDENT()->getText();
@@ -355,6 +366,7 @@ std::any Analyzer::visitFuncDef(CACTParser::FuncDefContext *ctx) {
     return std::any();
 }
 
+// 处理函数形参节点
 std::any Analyzer::visitFuncFParam(CACTParser::FuncFParamContext *ctx) {
     ctx->bType()->accept(this);
     ctx->datatype = ctx->bType()->btype;
@@ -399,6 +411,7 @@ std::any Analyzer::visitFuncFParam(CACTParser::FuncFParamContext *ctx) {
     return std::any();
 }
 
+// 处理函数体块节点
 std::any Analyzer::visitFuncBlock(CACTParser::FuncBlockContext *ctx) {
     IROperand *newLabel = nullptr;
     int i = 0;
@@ -416,6 +429,7 @@ std::any Analyzer::visitFuncBlock(CACTParser::FuncBlockContext *ctx) {
     return std::any();
 }
 
+// 处理块节点
 std::any Analyzer::visitBlock(CACTParser::BlockContext *ctx) {
     Block *newBlock = new Block(env->getCurrBlock());
     env->setCurrBlock(newBlock);
@@ -449,6 +463,7 @@ std::any Analyzer::visitBlock(CACTParser::BlockContext *ctx) {
     return std::any();
 }
 
+// 处理块声明项节点
 std::any Analyzer::visitBlockItemDecl(CACTParser::BlockItemDeclContext *ctx) {
     if (ctx->returnCheck) {
         throw runtime_error("missing return in function " + env->getCurrFunc()->getSymbolName() + ".");
@@ -457,6 +472,7 @@ std::any Analyzer::visitBlockItemDecl(CACTParser::BlockItemDeclContext *ctx) {
     return std::any();
 }
 
+// 处理块语句项节点
 std::any Analyzer::visitBlockItemStmt(CACTParser::BlockItemStmtContext *ctx) {
     if (ctx->returnCheck) {
         ctx->stmt()->returnCheck = true;
@@ -467,6 +483,7 @@ std::any Analyzer::visitBlockItemStmt(CACTParser::BlockItemStmtContext *ctx) {
     return std::any();
 }
 
+// 处理数字节点
 std::any Analyzer::visitNum(CACTParser::NumContext *ctx) {
     if (ctx->INTCONST() != nullptr) {
         ctx->datatype = Type::INT;
@@ -484,6 +501,7 @@ std::any Analyzer::visitNum(CACTParser::NumContext *ctx) {
     return std::any();
 }
 
+// 处理基本表达式数字节点
 std::any Analyzer::visitPriExpNum(CACTParser::PriExpNumContext *ctx) {
     ctx->num()->accept(this);
     ctx->datatype = ctx->num()->datatype;
@@ -493,6 +511,7 @@ std::any Analyzer::visitPriExpNum(CACTParser::PriExpNumContext *ctx) {
     return std::any();
 }
 
+// 处理嵌套基本表达式节点
 std::any Analyzer::visitPriExpNested(CACTParser::PriExpNestedContext *ctx) {
     ctx->exp()->accept(this);
     ctx->datatype = ctx->exp()->datatype;
@@ -502,6 +521,7 @@ std::any Analyzer::visitPriExpNested(CACTParser::PriExpNestedContext *ctx) {
     return std::any();
 }
 
+// 处理左值基本表达式节点
 std::any Analyzer::visitPriExpLval(CACTParser::PriExpLvalContext *ctx) {
     ctx->lVal()->accept(this);
     ctx->datatype = ctx->lVal()->datatype;
@@ -511,6 +531,7 @@ std::any Analyzer::visitPriExpLval(CACTParser::PriExpLvalContext *ctx) {
     return std::any();
 }
 
+// 处理左值节点
 std::any Analyzer::visitLVal(CACTParser::LValContext *ctx) {
     std::string symbolName = ctx->IDENT()->getText();
     ValSymbol *valSymbol = env->getCurrBlock()->searchValSymbol(symbolName);
@@ -579,6 +600,7 @@ std::any Analyzer::visitLVal(CACTParser::LValContext *ctx) {
     return std::any();
 }
 
+// 处理基本表达式中的一元表达式节点
 std::any Analyzer::visitUnaryExppri(CACTParser::UnaryExppriContext *ctx) {
     ctx->priExp()->accept(this);
     ctx->datatype = ctx->priExp()->datatype;
@@ -588,6 +610,7 @@ std::any Analyzer::visitUnaryExppri(CACTParser::UnaryExppriContext *ctx) {
     return std::any();
 }
 
+// 处理带有一元操作符的一元表达式节点
 std::any Analyzer::visitUnaryExpuna(CACTParser::UnaryExpunaContext *ctx) {
     ctx->unaryExp()->accept(this);
     if (ctx->NOT() != nullptr && ctx->unaryExp()->datatype != Type::BOOL) {
@@ -614,6 +637,7 @@ std::any Analyzer::visitUnaryExpuna(CACTParser::UnaryExpunaContext *ctx) {
     return std::any();
 }
 
+// 处理函数调用的一元表达式节点
 std::any Analyzer::visitUnaryExpfun(CACTParser::UnaryExpfunContext *ctx) {
     std::string symbolName = ctx->IDENT()->getText();
     FuncSymbol *funcSymbol = env->searchFuncSymbol(symbolName);
@@ -652,6 +676,7 @@ std::any Analyzer::visitUnaryExpfun(CACTParser::UnaryExpfunContext *ctx) {
     return std::any();
 }
 
+// 处理函数实参节点
 std::any Analyzer::visitFuncRParams(CACTParser::FuncRParamsContext *ctx) {
     std::vector<ValSymbol *> params = ctx->funcsymbol->getParams();
     std::vector<CACTParser::ExpContext *> exps = ctx->exp();
@@ -677,6 +702,7 @@ std::any Analyzer::visitFuncRParams(CACTParser::FuncRParamsContext *ctx) {
     return std::any();
 }
 
+// 处理乘法表达式乘法操作节点
 std::any Analyzer::visitMulExpmul(CACTParser::MulExpmulContext *ctx) {
     ctx->mulExp()->accept(this);
     if (ctx->mulExp()->datatype == Type::BOOL) {
@@ -742,6 +768,7 @@ std::any Analyzer::visitMulExpmul(CACTParser::MulExpmulContext *ctx) {
     return std::any();
 }
 
+// 处理一元乘法表达式节点
 std::any Analyzer::visitMulExpuna(CACTParser::MulExpunaContext *ctx) {
     ctx->unaryExp()->accept(this);
     ctx->datatype = ctx->unaryExp()->datatype;
@@ -751,6 +778,7 @@ std::any Analyzer::visitMulExpuna(CACTParser::MulExpunaContext *ctx) {
     return std::any();
 }
 
+// 处理加法表达式加法操作节点
 std::any Analyzer::visitAddExpadd(CACTParser::AddExpaddContext *ctx) {
     ctx->addExp()->accept(this);
     if (ctx->addExp()->datatype == Type::BOOL) {
@@ -808,6 +836,7 @@ std::any Analyzer::visitAddExpadd(CACTParser::AddExpaddContext *ctx) {
     return std::any();
 }
 
+// 处理乘法表达式中的加法操作节点
 std::any Analyzer::visitAddExpmul(CACTParser::AddExpmulContext *ctx) {
     ctx->mulExp()->accept(this);
     ctx->datatype = ctx->mulExp()->datatype;
@@ -817,6 +846,7 @@ std::any Analyzer::visitAddExpmul(CACTParser::AddExpmulContext *ctx) {
     return std::any();
 }
 
+// 处理表达式节点
 std::any Analyzer::visitExp(CACTParser::ExpContext *ctx) {
     if (ctx->BOOLCONST() != nullptr) {
         ctx->datatype = Type::BOOL;
@@ -833,6 +863,7 @@ std::any Analyzer::visitExp(CACTParser::ExpContext *ctx) {
     return std::any();
 }
 
+// 处理赋值语句节点
 std::any Analyzer::visitStmtAssign(CACTParser::StmtAssignContext *ctx) {
     if (ctx->returnCheck) {
         throw runtime_error("missing return in function " + env->getCurrFunc()->getSymbolName() + ".");
@@ -858,6 +889,7 @@ std::any Analyzer::visitStmtAssign(CACTParser::StmtAssignContext *ctx) {
     return std::any();
 }
 
+// 处理表达式语句节点
 std::any Analyzer::visitStmtExp(CACTParser::StmtExpContext *ctx) {
     if (ctx->returnCheck) {
         throw runtime_error("missing return in function " + env->getCurrFunc()->getSymbolName() + ".");
@@ -869,6 +901,7 @@ std::any Analyzer::visitStmtExp(CACTParser::StmtExpContext *ctx) {
     return std::any();
 }
 
+// 处理块语句节点
 std::any Analyzer::visitStmtBlock(CACTParser::StmtBlockContext *ctx) {
     if (ctx->returnCheck) {
         ctx->block()->returnCheck = true;
@@ -882,6 +915,7 @@ std::any Analyzer::visitStmtBlock(CACTParser::StmtBlockContext *ctx) {
     return std::any();
 }
 
+// 处理返回语句节点
 std::any Analyzer::visitStmtReturn(CACTParser::StmtReturnContext *ctx) {
     if (ctx->exp() != nullptr) {
         ctx->exp()->accept(this);
@@ -905,6 +939,7 @@ std::any Analyzer::visitStmtReturn(CACTParser::StmtReturnContext *ctx) {
     return std::any();
 }
 
+// 处理if语句节点
 std::any Analyzer::visitStmtIf(CACTParser::StmtIfContext *ctx) {
     if (ctx->returnCheck) {
         throw runtime_error("missing return in function " + env->getCurrFunc()->getSymbolName() + ".");
@@ -926,6 +961,7 @@ std::any Analyzer::visitStmtIf(CACTParser::StmtIfContext *ctx) {
     return std::any();
 }
 
+// 处理if-else语句节点
 std::any Analyzer::visitStmtIfElse(CACTParser::StmtIfElseContext *ctx) {
     if (ctx->returnCheck) {
         ctx->stmt(0)->returnCheck = true;
@@ -953,6 +989,7 @@ std::any Analyzer::visitStmtIfElse(CACTParser::StmtIfElseContext *ctx) {
     return std::any();
 }
 
+// 处理while语句节点
 std::any Analyzer::visitStmtWhile(CACTParser::StmtWhileContext *ctx) {
     if (ctx->returnCheck) {
         throw runtime_error("missing return in function " + env->getCurrFunc()->getSymbolName() + ".");
@@ -986,6 +1023,7 @@ std::any Analyzer::visitStmtWhile(CACTParser::StmtWhileContext *ctx) {
     return std::any();
 }
 
+// 处理break语句节点
 std::any Analyzer::visitStmtBreak(CACTParser::StmtBreakContext *ctx) {
     if (ctx->returnCheck) {
         throw runtime_error("missing return in function " + env->getCurrFunc()->getSymbolName() + ".");
@@ -997,6 +1035,7 @@ std::any Analyzer::visitStmtBreak(CACTParser::StmtBreakContext *ctx) {
     return std::any();
 }
 
+// 处理continue语句节点
 std::any Analyzer::visitStmtContinue(CACTParser::StmtContinueContext *ctx) {
     if (ctx->returnCheck) {
         throw runtime_error("missing return in function " + env->getCurrFunc()->getSymbolName() + ".");
@@ -1008,6 +1047,7 @@ std::any Analyzer::visitStmtContinue(CACTParser::StmtContinueContext *ctx) {
     return std::any();
 }
 
+// 处理逻辑或展开节点
 std::any Analyzer::visitLOrExpand(CACTParser::LOrExpandContext *ctx) {
     if (ctx->first) {
         ctx->lAndExp()->True  = nullptr;
@@ -1022,6 +1062,7 @@ std::any Analyzer::visitLOrExpand(CACTParser::LOrExpandContext *ctx) {
     return std::any();
 }
 
+// 处理逻辑或表达式节点
 std::any Analyzer::visitLOrExpor(CACTParser::LOrExporContext *ctx) {
     ctx->lOrExp()->first = false;
     
@@ -1042,6 +1083,7 @@ std::any Analyzer::visitLOrExpor(CACTParser::LOrExporContext *ctx) {
     return std::any();
 }
 
+// 处理逻辑与等于表达式节点
 std::any Analyzer::visitLAndExpeq(CACTParser::LAndExpeqContext *ctx) {
     if (ctx->first) {
         ctx->eqExp()->True  = ctx->True;
@@ -1062,6 +1104,7 @@ std::any Analyzer::visitLAndExpeq(CACTParser::LAndExpeqContext *ctx) {
     return std::any();
 }
 
+// 处理逻辑与展开节点
 std::any Analyzer::visitLAndExpand(CACTParser::LAndExpandContext *ctx) {
     ctx->lAndExp()->first = false;
     ctx->lAndExp()->True  = ctx->True;
@@ -1096,6 +1139,7 @@ std::any Analyzer::visitLAndExpand(CACTParser::LAndExpandContext *ctx) {
     return std::any();
 }
 
+// 处理关系表达式节点
 std::any Analyzer::visitEqExprel(CACTParser::EqExprelContext *ctx) {
     if (dynamic_cast<CACTParser::RelExpaddContext*>(ctx->relExp()) != nullptr) {
         throw std::runtime_error("illegal conditional expression.");
@@ -1106,6 +1150,7 @@ std::any Analyzer::visitEqExprel(CACTParser::EqExprelContext *ctx) {
     return std::any();
 }
 
+// 处理相等关系表达式节点
 std::any Analyzer::visitEqExpeq(CACTParser::EqExpeqContext *ctx) {
     ctx->relExp(0)->jump = false;
     ctx->relExp(1)->jump = false;
@@ -1133,6 +1178,7 @@ std::any Analyzer::visitEqExpeq(CACTParser::EqExpeqContext *ctx) {
     return std::any();
 }
 
+// 处理加法关系表达式节点
 std::any Analyzer::visitRelExpadd(CACTParser::RelExpaddContext *ctx) {
     ctx->addExp()->accept(this);
     ctx->datatype = ctx->addExp()->datatype;
@@ -1140,6 +1186,7 @@ std::any Analyzer::visitRelExpadd(CACTParser::RelExpaddContext *ctx) {
     return std::any();
 }
 
+// 处理关系表达式中的关系操作节点
 std::any Analyzer::visitRelExprel(CACTParser::RelExprelContext *ctx) {
     ctx->addExp(0)->accept(this);
     ctx->addExp(1)->accept(this);
@@ -1199,6 +1246,7 @@ std::any Analyzer::visitRelExprel(CACTParser::RelExprelContext *ctx) {
     return std::any();
 }
 
+// 处理布尔常量关系表达式节点
 std::any Analyzer::visitRelExpbool(CACTParser::RelExpboolContext *ctx) {
     ctx->datatype = Type::BOOL;
     ctx->result = irGenerator->addIRImmediateValue(Type::BOOL, ctx->BOOLCONST()->getText());

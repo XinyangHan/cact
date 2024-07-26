@@ -106,9 +106,9 @@ class IROptimizer { // IROptimizer类的定义
     std::vector<IntermediateCode*> optIrCodeList; // 优化后的中间代码列表
     
     IROptimizer() {} // 默认构造函数
-    void partitionBlocks(std::vector<IntermediateCode*> &irCodeList); // 基本块分区
-    void optimizeJumps(std::vector<IntermediateCode*> &irCodeList); // 跳转优化
-    void propagateConsts(IntermediateCodeGenerator*); // 常量传播优化
+    void splitIntoBasicBlocks(std::vector<IntermediateCode*> &irCodeList); // 基本块分区
+    void refineJumpInstructions(std::vector<IntermediateCode*> &irCodeList); // 跳转优化
+    void executeConstantPropagation(IntermediateCodeGenerator*); // 常量传播优化
     void eliminateCommonSubexp(); // 公共子表达式消除
     void calculateLiveness(); // 计算活跃度
     void rebuildIR(); // 重建中间代码

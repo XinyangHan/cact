@@ -3,7 +3,8 @@
 #include <cassert>
 #include "include/ir/generator.h"
 
-void IROptimizer::partitionBlocks(std::vector<IntermediateCode*> &irCodeList) {
+// 将中间代码分割成基本块
+void IROptimizer::splitIntoBasicBlocks(std::vector<IntermediateCode*> &irCodeList) {
     int basicBlockSeq = -1;
     bool blockEnd = false;
     //basicBlockList.push_back(new BasicBlock());
@@ -86,18 +87,21 @@ void IROptimizer::partitionBlocks(std::vector<IntermediateCode*> &irCodeList) {
     }
 }
 
+// 消除基本块中的公共子表达式
 void IROptimizer::eliminateCommonSubexp() {
     for (auto basicBlock : basicBlockList) {
         basicBlock->eliminateCommonSubexp();
     }
 }
 
+// 计算基本块中的变量活跃度
 void IROptimizer::calculateLiveness() {
     for (auto basicBlock : basicBlockList) {
         basicBlock->calculateLiveness();
     }
 }
 
+// 重建中间代码列表
 void IROptimizer::rebuildIR() {
     for (auto basicBlock : basicBlockList) {
         for (auto rebuidIR : basicBlock->rebuildIR) {
@@ -106,6 +110,7 @@ void IROptimizer::rebuildIR() {
     }
 }
 
+// 消除当前基本块中的公共子表达式
 void BasicBlock::eliminateCommonSubexp() {
     for (auto irCode : partitionedIR) {
         irCode->createDAG(this);
@@ -122,12 +127,14 @@ void BasicBlock::eliminateCommonSubexp() {
 
 }
 
+// 计算当前基本块中的变量活跃度
 void BasicBlock::calculateLiveness() {
     for (int i = rebuildIR.size()-1; i >= 0; i--) {
         rebuildIR[i]->calculateLiveness(this);
     }
 }
 
+// 查找或创建操作数对应的DAG节点
 DagNode *BasicBlock::findDagNode(IROperand *src) {
     auto it = this->operand2DagNode.find(src);
     if (it == this->operand2DagNode.end()) {
@@ -143,6 +150,7 @@ DagNode *BasicBlock::findDagNode(IROperand *src) {
     }
 }
 
+// 查找或创建操作数的生命周期信息
 LifetimeInfo *BasicBlock::findLiveInfo(IROperand* operand) {
     LifetimeInfo *newLifetimeInfo;
     auto it = livenessMap.find(operand);
@@ -162,6 +170,7 @@ LifetimeInfo *BasicBlock::findLiveInfo(IROperand* operand) {
     }
 }
 
+// 获取终端DAG节点的操作数
 IROperand *DagTermNode::getIROperand() {
     if (dynamic_cast<IRArrayElem*>(notTemp) != nullptr) {
         DagNode *dagNode = basicBlock->findDagNode(reinterpret_cast<IRArrayElem*>(notTemp)->tempPtr);
@@ -176,6 +185,7 @@ IROperand *DagTermNode::getIROperand() {
     }
 }
 
+// 获取内部DAG节点的操作数
 IROperand *DagInnerNode::getIROperand() {
     if (isArray) {
         auto it = relatedSet.begin();
@@ -187,6 +197,7 @@ IROperand *DagInnerNode::getIROperand() {
     }
 }
 
+// 初始化内部DAG节点的代表元素
 void DagInnerNode::initElem() {
     if (!isArray) {
         if (label != nullptr) {
@@ -197,6 +208,7 @@ void DagInnerNode::initElem() {
     }
 }
 
+// 重建内部DAG节点的中间代码
 IntermediateCode *DagInnerNode::rebuildIR(std::vector<IntermediateCode*>& rebuildIR) {
     IROperand *src1 = lchild->getIROperand();
     IROperand *src2 = nullptr;
@@ -218,6 +230,7 @@ IntermediateCode *DagInnerNode::rebuildIR(std::vector<IntermediateCode*>& rebuil
     return nullptr;
 }
 
+// 重建其他DAG节点的中间代码
 IntermediateCode *DagOtherNode::rebuildIR(std::vector<IntermediateCode*>& rebuildIR) {
     if (opCode != IR_PARAM && opCode != IR_RETURN) {
         return irCode;
@@ -235,12 +248,14 @@ IntermediateCode *DagOtherNode::rebuildIR(std::vector<IntermediateCode*>& rebuil
     }
 }
 
+// 打印优化后的中间代码
 void IROptimizer::printOptIntermediateCode(std::ofstream &irCodeFile) {
     for (auto const & irCode : optIrCodeList) {
         irCode->print(irCodeFile);
     }
 }
 
+// 打印基本块信息
 void IROptimizer::printBlocks() {
     std::ofstream debug;
     debug.open("./basicBlock.txt");
@@ -253,12 +268,14 @@ void IROptimizer::printBlocks() {
     debug.close();
 }
 
+// 将前驱节点的出口集合添加到当前节点的入口集合
 void addReachOut(std::set<IntermediateCode*> &in, std::set<IntermediateCode*> &predOut) {
     for (auto irCode : predOut)
         in.insert(irCode);
 }
 
-bool killAndGen(std::set<IntermediateCode*> &in, std::set<IntermediateCode*> &out, std::set<IntermediateCode*> &kill, IntermediateCode *self) {
+// 更新活跃度信息，处理杀死和生成的中间代码
+bool updateLivenessInfo(std::set<IntermediateCode*> &in, std::set<IntermediateCode*> &out, std::set<IntermediateCode*> &kill, IntermediateCode *self) {
     std::set<IntermediateCode*> tmp;
     for (auto irCode : out)
         tmp.insert(irCode);
@@ -278,7 +295,8 @@ bool killAndGen(std::set<IntermediateCode*> &in, std::set<IntermediateCode*> &ou
     return true;
 }
 
-void IROptimizer::propagateConsts(IntermediateCodeGenerator *irGenerator) {
+// 执行常量传播优化
+void IROptimizer::executeConstantPropagation(IntermediateCodeGenerator *irGenerator) {
     for (int i = 0; i < funcBeginSeq.size(); i++) {
         bool flag = false;
 
@@ -301,7 +319,7 @@ void IROptimizer::propagateConsts(IntermediateCodeGenerator *irGenerator) {
                     case IR_ASSIGN: case IR_NEG: case IR_NOT:
                     case IR_ADD: case IR_SUB: case IR_MUL:
                     case IR_DIV: case IR_MOD: case IR_L_ALLOC:
-                        if (killAndGen(basicBlockList[j]->partitionedIR[k]->reachIn, basicBlockList[j]->partitionedIR[k]->reachOut, basicBlockList[j]->partitionedIR[k]->dst->def, basicBlockList[j]->partitionedIR[k]))
+                        if (updateLivenessInfo(basicBlockList[j]->partitionedIR[k]->reachIn, basicBlockList[j]->partitionedIR[k]->reachOut, basicBlockList[j]->partitionedIR[k]->dst->def, basicBlockList[j]->partitionedIR[k]))
                             flag = true;
                         break; 
                     default:
@@ -492,7 +510,8 @@ void IROptimizer::propagateConsts(IntermediateCodeGenerator *irGenerator) {
     }
 } 
 
-void IROptimizer::optimizeJumps(std::vector<IntermediateCode*> &irCodeList) {
+// 优化跳转指令
+void IROptimizer::refineJumpInstructions(std::vector<IntermediateCode*> &irCodeList) {
     for (auto irCode : irCodeList){
         switch(irCode->opCode){
             case IR_GOTO:

@@ -46,7 +46,7 @@ class AssemblyCodeGenerator { // AssemblyCodeGenerator类的定义
     AssemblyCodeGenerator() {} // 默认构造函数
 
     // 执行汇编代码生成
-    void executeAssemblyGene(std::ofstream &asmCodeFile, std::vector<BasicBlock*> &basicBlockList);  
+    void executeAssemblyGene(std::ofstream &asmFile, std::vector<BasicBlock*> &basicBlockList);  
     // 初始化寄存器描述符
     void initRegDescriptor();
     // 获取寄存器

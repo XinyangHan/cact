@@ -23,7 +23,7 @@ class IROperand { // IROperand类的定义
     virtual void argReg(AssemblyCodeGenerator *AssemblyGenerator, int num, std::string srcReg); // 转换为参数寄存器
     virtual void assignReg(AssemblyCodeGenerator *AssemblyGenerator, int num) {} // 转换为分配寄存器
     virtual void toMem(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo, std::string srcReg) {}; // 转换为内存
-    virtual void printIR(std::ofstream &irCodeFile) = 0; // 打印中间代码
+    virtual void logIR(std::ofstream &irCodeFile) = 0; // 打印中间代码
     virtual LifetimeInfo *setLifetimeInfo(BasicBlock *basicBlock); // 设置生命周期信息
     virtual void calculateLiveness(BasicBlock *basicBlock, bool liveness, IntermediateCode *usedInfo); // 计算活跃度
 };
@@ -44,7 +44,7 @@ class IrGlobalVariable : public IRVar, public IROperand { // IrGlobalVariable类
     bool alloc = false; // 是否已分配
 
     IrGlobalVariable(Type dataType, int len, std::vector<IROperand*> &initVal) : IRVar(dataType, len), initVal(initVal) {opDataType = dataType;} // 构造函数，初始化数据类型和初始化值
-    virtual void printIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
+    virtual void logIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
 };
 
 class IRGloblScalar : public IrGlobalVariable { // IRGloblScalar类，继承自IrGlobalVariable
@@ -73,7 +73,7 @@ class IRLocalVar : public IRVar, public IROperand { // IRLocalVar类，继承自
     int offset; // 位移
 
     IRLocalVar(Type dataType, int len, std::vector<IROperand*> &initVal) : IRVar(dataType, len), initVal(initVal) {opDataType = dataType;} // 构造函数，初始化数据类型、长度和初始化值
-    virtual void printIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
+    virtual void logIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
 };
 
 class IRLocalScalar : public IRLocalVar { // IRLocalScalar类，继承自IRLocalVar
@@ -105,7 +105,7 @@ class IRImmediateValue : public IRVar, public IROperand { // IRImmediateValue类
     std::string toRegisterInt(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo); // 转换为整数寄存器
     std::string toRegisterFloat(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo); // 转换为浮点寄存器
     std::string toRegisterDouble(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo); // 转换为双精度寄存器
-    void printIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
+    void logIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
 };
 
 class TemporaryValue : public IRVar, public IROperand { // TemporaryValue类，继承自IRVar和IROperand
@@ -117,7 +117,7 @@ class TemporaryValue : public IRVar, public IROperand { // TemporaryValue类，�
     std::string toRegister(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) override; // 重写转换为寄存器函数
     std::string toRegisterInt(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo); // 转换为整数寄存器
     std::string toRegisterFloat(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo); // 转换为浮点寄存器
-    void printIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
+    void logIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
 };
 
 class IRArrayElem : public IROperand { // IRArrayElem类，继承自IROperand
@@ -131,7 +131,7 @@ class IRArrayElem : public IROperand { // IRArrayElem类，继承自IROperand
     std::string toRegisterFloat(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo); // 转换为浮点寄存器
     std::string toRegisterDouble(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo); // 转换为双精度寄存器
     void toMem(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo, std::string srcReg) override; // 重写转换为内存函数
-    void printIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
+    void logIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
     LifetimeInfo *setLifetimeInfo(BasicBlock *basicBlock) override; // 重写设置生命周期信息函数
     void calculateLiveness(BasicBlock *basicBlock, bool liveness, IntermediateCode *usedInfo) override; // 重写计算活跃度函数
     IROperand *getSrc() override; // 重写获取源操作数函数
@@ -144,7 +144,7 @@ class IRArrayAddr : public IROperand { // IRArrayAddr类，继承自IROperand
     IROperand *tempPtr; // 临时指针
     IRArrayAddr(IROperand *arrayPtr, IROperand *tempPtr) : arrayPtr(arrayPtr), tempPtr(tempPtr) {} // 构造函数，初始化数组指针和临时指针
     std::string toRegister(AssemblyCodeGenerator *AssemblyGenerator, LifetimeInfo *liveInfo) override; // 重写转换为寄存器函数
-    void printIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
+    void logIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
 
     LifetimeInfo *setLifetimeInfo(BasicBlock *basicBlock) override; // 重写设置生命周期信息函数
     void calculateLiveness(BasicBlock *basicBlock, bool liveness, IntermediateCode *usedInfo) override; // 重写计算活跃度函数
@@ -157,7 +157,7 @@ class IRLabel : public IROperand { // IRLabel类，继承自IROperand
     static int labelNum; // 标签计数
     int name; // 名称
     IRLabel() {name = labelNum++;} // 构造函数，初始化名称
-    void printIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
+    void logIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
 };
 
 class IRFunc : public IROperand { // IRFunc类，继承自IROperand
@@ -165,5 +165,5 @@ class IRFunc : public IROperand { // IRFunc类，继承自IROperand
     int stackSize; // 栈大小
     FuncSymbol *funcSymbol; // 函数符号
     IRFunc(FuncSymbol *funcSymbol) : funcSymbol(funcSymbol) {} // 构造函数，初始化函数符号
-    void printIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
+    void logIR(std::ofstream &irCodeFile) override; // 重写打印中间代码函数
 }; 
